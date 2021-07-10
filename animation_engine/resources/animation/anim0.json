@@ -1,0 +1,29 @@
+{
+  "len": 100,
+  "fps": 60.0,
+  "data": [
+    [
+      "Position_x",
+      {
+        "keys": [
+          {
+            "frame": 1,
+            "value": 0.0
+          },
+          {
+            "frame": 20,
+            "value": 100.0
+          },
+          {
+            "frame": 40,
+            "value": 700.0
+          },
+          {
+            "frame": 60,
+            "value": 750.0
+          }
+        ]
+      }
+    ]
+  ]
+}

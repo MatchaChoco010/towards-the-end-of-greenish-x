@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "executor",
+  "animation_engine",
+  "animation_engine_macro",
+]
