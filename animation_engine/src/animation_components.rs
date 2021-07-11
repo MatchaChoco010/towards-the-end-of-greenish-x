@@ -1,4 +1,5 @@
 use animation_engine_macro::*;
+use uuid::Uuid;
 
 anim_components! {
 
@@ -14,6 +15,20 @@ anim_components! {
 
     #[derive(Clone, Copy)]
     #[animation_component]
+    pub struct UniformScale {
+        #[animation_property]
+        pub scale: f32,
+    }
+
+    #[derive(Clone, Copy)]
+    #[animation_component]
+    pub struct Rotation {
+        #[animation_property]
+        pub rotation: f32,
+    }
+
+    #[derive(Clone, Copy)]
+    #[animation_component]
     pub struct Color {
         #[animation_property]
         pub r: f32,
@@ -24,6 +39,13 @@ anim_components! {
     }
 
     #[derive(Clone, Copy)]
+    #[animation_component]
+    pub struct Opacity {
+        #[animation_property]
+        pub opacity: f32,
+    }
+
+    #[derive(Clone)]
     pub enum Renderable {
         #[animation_component]
         Rect {
@@ -31,6 +53,13 @@ anim_components! {
             width: f32,
             #[animation_property]
             height: f32,
+        },
+        Text {
+            text: String,
+            font_size: f32,
+        },
+        Image {
+            image: Uuid,
         }
     }
 

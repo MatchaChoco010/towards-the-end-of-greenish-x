@@ -1,7 +1,6 @@
-mod animation;
 mod animation_components;
-mod components;
 mod engine;
+mod image_store;
 mod key_input_state;
 mod render;
 
