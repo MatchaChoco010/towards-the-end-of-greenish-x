@@ -5,6 +5,9 @@ fn main() -> anyhow::Result<()> {
     engine.load_animation_json("anim0", "animation/anim0.json")?;
     engine.load_animation_json("anim1", "animation/anim1.json")?;
     engine.load_image("img0", "/image/img0.png")?;
+    engine.load_bgm("bgm0", "/audio/bgm0.ogg")?;
+    engine.load_bgm("bgm1", "/audio/bgm1.ogg")?;
+    engine.load_sfx("sfx0", "/audio/fx0.ogg")?;
 
     let cx = engine.get_context();
     let _entity = cx.add_image(AddImageInfo {
@@ -41,7 +44,24 @@ fn main() -> anyhow::Result<()> {
 
     let mut checker: Option<AnimationFinishChecker> = None;
     let mut anim_name = "anim0";
+    let mut bgm_name = "bgm0";
+    cx.play_bgm("bgm0");
+
     engine.run_with_update_func(move |cx| {
+        if cx.key_down(KeyCode::X) {
+            cx.play_sfx("sfx0");
+        }
+
+        if cx.key_down(KeyCode::C) {
+            if bgm_name == "bgm0" {
+                cx.play_bgm("bgm1");
+                bgm_name = "bgm1";
+            } else if bgm_name == "bgm1" {
+                cx.play_bgm("bgm0");
+                bgm_name = "bgm0";
+            }
+        }
+
         if cx.key_down(KeyCode::Z) {
             match checker.as_mut() {
                 None => {

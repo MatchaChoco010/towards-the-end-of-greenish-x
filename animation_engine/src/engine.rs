@@ -1,4 +1,5 @@
 use crate::animation_components::*;
+use crate::audio_store::*;
 use crate::image_store::*;
 use crate::key_input_state::*;
 use crate::render::*;
@@ -122,6 +123,7 @@ impl AnimationEngineContext {
         let mut resources = Resources::default();
         resources.insert::<AnimationStore>(AnimationStore::new());
         resources.insert::<ImageStore>(ImageStore::new());
+        resources.insert::<AudioStore>(AudioStore::new());
 
         Self {
             current_time: Instant::now(),
@@ -215,6 +217,44 @@ impl AnimationEngineContext {
         self.world.remove(entity);
     }
 
+    pub fn set_width(&mut self, entity: Entity, width: f32) -> anyhow::Result<()> {
+        match self
+            .world
+            .entry_mut(entity)?
+            .get_component_mut::<Renderable>()
+            .expect(&format!("Entity {:?} has no renderable component", entity))
+        {
+            Renderable::Rect { width: w, .. } => *w = width,
+            _ => (),
+        }
+        Ok(())
+    }
+
+    pub fn set_position(&mut self, entity: Entity, x: f32, y: f32, z: u32) -> anyhow::Result<()> {
+        let mut entry = self.world.entry_mut(entity)?;
+        let pos = entry
+            .get_component_mut::<Position>()
+            .expect(&format!("Entity {:?} has no position component", entity));
+        pos.x = x;
+        pos.y = y;
+        pos.z = z;
+        Ok(())
+    }
+
+    pub fn play_bgm(&mut self, name: impl ToString) {
+        self.resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .set_bgm(name);
+    }
+
+    pub fn play_sfx(&mut self, name: impl ToString) {
+        self.resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .push_sfx_to_queue(name);
+    }
+
     pub fn key_down(&self, key: KeyCode) -> bool {
         self.key_input.key_down(key)
     }
@@ -239,7 +279,7 @@ impl AnimationEngineContext {
     }
 }
 impl EventHandler<GameError> for AnimationEngineContext {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult {
+    fn update(&mut self, ctx: &mut Context) -> GameResult {
         // Update timer
         let delta_time = Instant::now() - self.current_time;
         if delta_time > Duration::from_millis(35) {
@@ -262,6 +302,12 @@ impl EventHandler<GameError> for AnimationEngineContext {
 
         // Update Animation
         self.schedule.execute(&mut self.world, &mut self.resources);
+
+        // Play audio
+        self.resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .update(ctx)?;
 
         Ok(())
     }
@@ -363,6 +409,24 @@ impl AnimationEngine {
             .get_mut::<ImageStore>()
             .unwrap()
             .load_image(&mut self.ctx, name, path)
+    }
+
+    pub fn load_sfx(&mut self, name: impl ToString, path: impl AsRef<Path>) -> anyhow::Result<()> {
+        self.inner
+            .resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .load_sfx(&mut self.ctx, name, path)?;
+        Ok(())
+    }
+
+    pub fn load_bgm(&mut self, name: impl ToString, path: impl AsRef<Path>) -> anyhow::Result<()> {
+        self.inner
+            .resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .load_bgm(&mut self.ctx, name, path)?;
+        Ok(())
     }
 
     pub fn get_context(&mut self) -> &mut AnimationEngineContext {
