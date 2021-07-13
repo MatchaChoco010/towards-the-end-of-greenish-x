@@ -3,9 +3,14 @@ name = "animation_engine"
 version = "0.1.0"
 edition = "2018"
 
+[features]
+default = [ "async-feature" ]
+async-feature = [ "executor" ]
+
 [dependencies]
 animation_engine_macro = { path = "../animation_engine_macro" }
 anyhow = "1.0.41"
+executor = { path = "../executor", optional = true }
 ggez = "0.6.0-rc2"
 legion = "0.4.0"
 serde = { version = "1.0.126", features = ["derive"] }

@@ -4,12 +4,16 @@ use crate::image_store::*;
 use crate::key_input_state::*;
 use crate::render::*;
 use anyhow::Result;
+#[cfg(feature = "async-feature")]
+use executor::*;
 use ggez::event::{self, EventHandler, EventLoop, KeyCode};
 use ggez::*;
 use legion::*;
+use std::cell::{Ref, RefCell, RefMut};
 use std::env;
-use std::path;
-use std::path::Path;
+use std::future::Future;
+use std::path::{self, Path};
+use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 pub use crate::animation_components::AnimationFinishChecker;
@@ -105,7 +109,18 @@ impl Default for AddTextInfo {
     }
 }
 
-pub struct AnimationEngineContext {
+#[derive(Clone)]
+pub struct AnimationEngineContext(Rc<RefCell<AnimationEngineInner>>);
+impl AnimationEngineContext {
+    fn get_mut(&self) -> RefMut<AnimationEngineInner> {
+        self.0.borrow_mut()
+    }
+
+    fn get(&self) -> Ref<AnimationEngineInner> {
+        self.0.borrow()
+    }
+}
+pub struct AnimationEngineInner {
     current_time: Instant,
     delta_time: Duration,
     world: World,
@@ -113,6 +128,7 @@ pub struct AnimationEngineContext {
     schedule: Schedule,
     update_function: Option<Box<dyn FnMut(&mut AnimationEngineContext) -> ()>>,
     key_input: KeyInputState,
+    quit_flag: bool,
 }
 impl AnimationEngineContext {
     fn new() -> Self {
@@ -125,7 +141,7 @@ impl AnimationEngineContext {
         resources.insert::<ImageStore>(ImageStore::new());
         resources.insert::<AudioStore>(AudioStore::new());
 
-        Self {
+        Self(Rc::new(RefCell::new(AnimationEngineInner {
             current_time: Instant::now(),
             delta_time: Duration::new(0, 0),
             world: World::default(),
@@ -133,7 +149,12 @@ impl AnimationEngineContext {
             schedule,
             update_function: None,
             key_input: KeyInputState::new(),
-        }
+            quit_flag: false,
+        })))
+    }
+
+    pub fn quit(&mut self) {
+        self.get_mut().quit_flag = true;
     }
 
     pub fn add_rect(&mut self, info: AddRectInfo) -> Entity {
@@ -150,7 +171,7 @@ impl AnimationEngineContext {
             b,
             a,
         } = info;
-        self.world.push((
+        self.get_mut().world.push((
             Position { x, y, z },
             UniformScale { scale },
             Rotation { rotation },
@@ -174,12 +195,13 @@ impl AnimationEngineContext {
             name,
         } = info;
         let uuid = self
+            .get_mut()
             .resources
             .get::<ImageStore>()
             .unwrap()
             .get_image_uuid_from_name(name)
             .expect("Failed to get image");
-        self.world.push((
+        self.get_mut().world.push((
             Position { x, y, z },
             UniformScale { scale },
             Rotation { rotation },
@@ -203,7 +225,7 @@ impl AnimationEngineContext {
             text,
             font_size,
         } = info;
-        self.world.push((
+        self.get_mut().world.push((
             Position { x, y, z },
             UniformScale { scale },
             Rotation { rotation },
@@ -214,11 +236,12 @@ impl AnimationEngineContext {
     }
 
     pub fn delete_entity(&mut self, entity: Entity) {
-        self.world.remove(entity);
+        self.get_mut().world.remove(entity);
     }
 
     pub fn set_width(&mut self, entity: Entity, width: f32) -> anyhow::Result<()> {
         match self
+            .get_mut()
             .world
             .entry_mut(entity)?
             .get_component_mut::<Renderable>()
@@ -231,7 +254,8 @@ impl AnimationEngineContext {
     }
 
     pub fn set_position(&mut self, entity: Entity, x: f32, y: f32, z: u32) -> anyhow::Result<()> {
-        let mut entry = self.world.entry_mut(entity)?;
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
         let pos = entry
             .get_component_mut::<Position>()
             .expect(&format!("Entity {:?} has no position component", entity));
@@ -242,29 +266,58 @@ impl AnimationEngineContext {
     }
 
     pub fn play_bgm(&mut self, name: impl ToString) {
-        self.resources
+        self.get_mut()
+            .resources
             .get_mut::<AudioStore>()
             .unwrap()
             .set_bgm(name);
     }
 
     pub fn play_sfx(&mut self, name: impl ToString) {
-        self.resources
+        self.get_mut()
+            .resources
             .get_mut::<AudioStore>()
             .unwrap()
             .push_sfx_to_queue(name);
     }
 
     pub fn key_down(&self, key: KeyCode) -> bool {
-        self.key_input.key_down(key)
+        self.get().key_input.key_down(key)
     }
 
     pub fn key_pressed(&self, key: KeyCode) -> bool {
-        self.key_input.key_pressed(key)
+        self.get().key_input.key_pressed(key)
     }
 
     pub fn key_up(&self, key: KeyCode) -> bool {
-        self.key_input.key_up(key)
+        self.get().key_input.key_up(key)
+    }
+
+    pub async fn wait_key_down(&self, key: KeyCode) {
+        loop {
+            if self.get().key_input.key_down(key) {
+                break;
+            }
+            next_frame().await;
+        }
+    }
+
+    pub async fn wait_key_pressed(&self, key: KeyCode) {
+        loop {
+            if self.get().key_input.key_pressed(key) {
+                break;
+            }
+            next_frame().await;
+        }
+    }
+
+    pub async fn wait_key_up(&self, key: KeyCode) {
+        loop {
+            if self.get().key_input.key_up(key) {
+                break;
+            }
+            next_frame().await;
+        }
     }
 
     pub fn start_animation(
@@ -272,48 +325,74 @@ impl AnimationEngineContext {
         entity: Entity,
         name: impl ToString,
     ) -> Result<AnimationFinishChecker> {
-        self.resources
-            .get_mut::<AnimationStore>()
-            .unwrap()
-            .insert_animation_components(entity, name, &mut self.world, self.current_time)
+        let this = &mut *self.get_mut();
+        let anim_store = this.resources.get_mut::<AnimationStore>().unwrap();
+        anim_store.insert_animation_components(entity, name, &mut this.world, this.current_time)
+    }
+
+    #[cfg(feature = "async-feature")]
+    pub async fn play_animation(&mut self, entity: Entity, name: impl ToString) -> Result<()> {
+        let mut checker = self.start_animation(entity, name)?;
+        loop {
+            if checker.is_finished() {
+                break;
+            }
+            next_frame().await;
+        }
+        Ok(())
     }
 }
 impl EventHandler<GameError> for AnimationEngineContext {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         // Update timer
-        let delta_time = Instant::now() - self.current_time;
+        let delta_time = Instant::now() - self.get().current_time;
         if delta_time > Duration::from_millis(35) {
-            self.delta_time = Duration::from_nanos(0_016_666_666);
+            self.get_mut().delta_time = Duration::from_nanos(0_016_666_666);
         } else {
-            self.delta_time = delta_time;
+            self.get_mut().delta_time = delta_time;
         }
-        self.current_time = self.current_time + self.delta_time;
-        self.resources.insert::<Duration>(self.delta_time);
-        self.resources.insert::<Instant>(self.current_time);
+        let delta_time = self.get().delta_time;
+        self.get_mut().current_time += delta_time;
+        let current_time = self.get().current_time;
+        self.get_mut().resources.insert::<Duration>(delta_time);
+        self.get_mut().resources.insert::<Instant>(current_time);
 
         // Main Update Function
-        if let Some(mut update) = self.update_function.take() {
+        let update = self.get_mut().update_function.take();
+        if let Some(mut update) = update {
             update(self);
-            self.update_function = Some(update);
+            self.get_mut().update_function = Some(update);
         }
 
         // Reset Key Input
-        self.key_input.reset_current_frame_input();
+        self.get_mut().key_input.reset_current_frame_input();
 
         // Update Animation
-        self.schedule.execute(&mut self.world, &mut self.resources);
+        {
+            let this = &mut *self.get_mut();
+            let resources = &mut this.resources;
+            let world = &mut this.world;
+            let schedule = &mut this.schedule;
+            schedule.execute(world, resources);
+        }
 
         // Play audio
-        self.resources
+        self.get_mut()
+            .resources
             .get_mut::<AudioStore>()
             .unwrap()
             .update(ctx)?;
+
+        // Quit game if quit flag is on
+        if self.get().quit_flag {
+            ggez::event::quit(ctx);
+        }
 
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        render(ctx, &self.world, &self.resources)
+        render(ctx, &self.get().world, &self.get().resources)
     }
 
     fn key_down_event(
@@ -323,16 +402,16 @@ impl EventHandler<GameError> for AnimationEngineContext {
         _keymods: event::KeyMods,
         _repeat: bool,
     ) {
-        self.key_input.set_down(keycode);
+        self.get_mut().key_input.set_down(keycode);
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: event::KeyMods) {
-        self.key_input.set_up(keycode);
+        self.get_mut().key_input.set_up(keycode);
     }
 
     fn focus_event(&mut self, _ctx: &mut Context, gained: bool) {
         if gained {
-            self.key_input.reset();
+            self.get_mut().key_input.reset();
         }
     }
 }
@@ -366,9 +445,9 @@ impl AnimationEngine {
 
         let (mut ctx, events_loop) = cb.build().expect("Failed to create event loop");
 
-        let mut inner = AnimationEngineContext::new();
+        let inner = AnimationEngineContext::new();
 
-        inner.resources.insert::<graphics::Font>(
+        inner.get_mut().resources.insert::<graphics::Font>(
             graphics::Font::new(&mut ctx, "/font/07LogoTypeGothic-Condense.ttf").unwrap(),
         );
 
@@ -393,6 +472,7 @@ impl AnimationEngine {
         };
         let path = &resource_dir.join(path);
         self.inner
+            .get_mut()
             .resources
             .get_mut::<AnimationStore>()
             .unwrap()
@@ -405,6 +485,7 @@ impl AnimationEngine {
         path: impl AsRef<Path>,
     ) -> anyhow::Result<()> {
         self.inner
+            .get_mut()
             .resources
             .get_mut::<ImageStore>()
             .unwrap()
@@ -413,6 +494,7 @@ impl AnimationEngine {
 
     pub fn load_sfx(&mut self, name: impl ToString, path: impl AsRef<Path>) -> anyhow::Result<()> {
         self.inner
+            .get_mut()
             .resources
             .get_mut::<AudioStore>()
             .unwrap()
@@ -422,6 +504,7 @@ impl AnimationEngine {
 
     pub fn load_bgm(&mut self, name: impl ToString, path: impl AsRef<Path>) -> anyhow::Result<()> {
         self.inner
+            .get_mut()
             .resources
             .get_mut::<AudioStore>()
             .unwrap()
@@ -434,10 +517,36 @@ impl AnimationEngine {
     }
 
     pub fn run_with_update_func(
-        mut self,
+        self,
         update: impl FnMut(&mut AnimationEngineContext) -> () + 'static,
     ) -> anyhow::Result<()> {
-        self.inner.update_function = Some(Box::new(update));
+        self.inner.get_mut().update_function = Some(Box::new(update));
+        event::run(self.ctx, self.events_loop, self.inner)
+    }
+
+    #[cfg(feature = "async-feature")]
+    pub fn run_with_async_func<F, Fut>(self, async_fn: F) -> anyhow::Result<()>
+    where
+        F: FnOnce(AnimationEngineContext) -> Fut + 'static,
+        Fut: Future<Output = ()>,
+    {
+        activate_thread_local_executor();
+        spawn({
+            let inner = self.inner.clone();
+            async move {
+                async_fn(inner).await;
+            }
+        });
+        self.inner.get_mut().update_function = Some(Box::new({
+            let mut inner = self.inner.clone();
+            move |cx| {
+                let delta_time = cx.get().delta_time;
+                match step(delta_time) {
+                    StepState::RemainTasks => (),
+                    StepState::Completed => inner.quit(),
+                }
+            }
+        }));
         event::run(self.ctx, self.events_loop, self.inner)
     }
 }

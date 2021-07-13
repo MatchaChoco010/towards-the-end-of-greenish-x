@@ -1,15 +1,7 @@
 use animation_engine::*;
+use executor::*;
 
-fn main() -> anyhow::Result<()> {
-    let mut engine = AnimationEngine::new()?;
-    engine.load_animation_json("anim0", "animation/anim0.json")?;
-    engine.load_animation_json("anim1", "animation/anim1.json")?;
-    engine.load_image("img0", "/image/img0.png")?;
-    engine.load_bgm("bgm0", "/audio/bgm0.ogg")?;
-    engine.load_bgm("bgm1", "/audio/bgm1.ogg")?;
-    engine.load_sfx("sfx0", "/audio/fx0.ogg")?;
-
-    let cx = engine.get_context();
+async fn game(mut cx: AnimationEngineContext) {
     let _entity = cx.add_image(AddImageInfo {
         name: "img0".to_string(),
         x: 400.0 - 64.0,
@@ -42,47 +34,67 @@ fn main() -> anyhow::Result<()> {
         ..Default::default()
     });
 
-    let mut checker: Option<AnimationFinishChecker> = None;
     let mut anim_name = "anim0";
     let mut bgm_name = "bgm0";
     cx.play_bgm("bgm0");
 
-    engine.run_with_update_func(move |cx| {
-        if cx.key_down(KeyCode::X) {
-            cx.play_sfx("sfx0");
-        }
-
-        if cx.key_down(KeyCode::C) {
-            if bgm_name == "bgm0" {
-                cx.play_bgm("bgm1");
-                bgm_name = "bgm1";
-            } else if bgm_name == "bgm1" {
-                cx.play_bgm("bgm0");
-                bgm_name = "bgm0";
+    spawn({
+        let mut cx = cx.clone();
+        async move {
+            loop {
+                cx.wait_key_down(KeyCode::X).await;
+                cx.play_sfx("sfx0");
+                next_frame().await;
             }
         }
+    });
 
-        if cx.key_down(KeyCode::Z) {
-            match checker.as_mut() {
-                None => {
-                    println!("Start anim0");
-                    checker = cx.start_animation(anim_entity, "anim0").ok();
-                    anim_name = "anim1";
+    spawn({
+        let mut cx = cx.clone();
+        async move {
+            loop {
+                cx.wait_key_down(KeyCode::C).await;
+                if bgm_name == "bgm0" {
+                    cx.play_bgm("bgm1");
+                    bgm_name = "bgm1";
+                } else if bgm_name == "bgm1" {
+                    cx.play_bgm("bgm0");
+                    bgm_name = "bgm0";
                 }
-                Some(c) => {
-                    if c.is_finished() {
-                        if anim_name == "anim0" {
-                            println!("Start anim0");
-                            checker = cx.start_animation(anim_entity, "anim0").ok();
-                            anim_name = "anim1";
-                        } else if anim_name == "anim1" {
-                            println!("Start anim1");
-                            checker = cx.start_animation(anim_entity, "anim1").ok();
-                            anim_name = "anim0";
-                        }
-                    }
-                }
+                next_frame().await;
             }
         }
-    })
+    });
+
+    spawn({
+        let mut cx = cx.clone();
+        async move {
+            cx.wait_key_down(KeyCode::Q).await;
+            cx.quit();
+        }
+    });
+
+    loop {
+        cx.wait_key_down(KeyCode::Z).await;
+        if anim_name == "anim0" {
+            println!("Start anim0");
+            cx.play_animation(anim_entity, "anim0").await.unwrap();
+            anim_name = "anim1";
+        } else if anim_name == "anim1" {
+            println!("Start anim1");
+            cx.play_animation(anim_entity, "anim1").await.unwrap();
+            anim_name = "anim0";
+        }
+    }
+}
+
+fn main() -> anyhow::Result<()> {
+    let mut engine = AnimationEngine::new()?;
+    engine.load_animation_json("anim0", "animation/anim0.json")?;
+    engine.load_animation_json("anim1", "animation/anim1.json")?;
+    engine.load_image("img0", "/image/img0.png")?;
+    engine.load_bgm("bgm0", "/audio/bgm0.ogg")?;
+    engine.load_bgm("bgm1", "/audio/bgm1.ogg")?;
+    engine.load_sfx("sfx0", "/audio/fx0.ogg")?;
+    engine.run_with_async_func(game)
 }
