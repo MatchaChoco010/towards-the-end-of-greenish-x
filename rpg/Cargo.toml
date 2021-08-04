@@ -1,0 +1,12 @@
+[package]
+name = "rpg"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+animation_engine = { path = "../animation_engine" }
+anyhow = "1.0.42"
+chrono = "0.4.19"
+fern = "0.6.0"
+log = "0.4.14"
+path-slash = "0.1.4"

@@ -422,7 +422,7 @@ pub struct AnimationEngine {
     events_loop: EventLoop<()>,
 }
 impl AnimationEngine {
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new(title: impl ToString) -> anyhow::Result<Self> {
         let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
             let mut path = path::PathBuf::from(manifest_dir);
             path.push("resources");
@@ -433,7 +433,7 @@ impl AnimationEngine {
 
         let cb = ContextBuilder::new("Sample Game", "Orito Itsuki")
             .window_setup(ggez::conf::WindowSetup {
-                title: "rust async executor and rpg!".to_string(),
+                title: title.to_string(),
                 ..Default::default()
             })
             .window_mode(ggez::conf::WindowMode {

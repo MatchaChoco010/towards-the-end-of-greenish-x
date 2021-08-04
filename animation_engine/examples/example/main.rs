@@ -89,7 +89,7 @@ async fn game(mut cx: AnimationEngineContext) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let mut engine = AnimationEngine::new()?;
+    let mut engine = AnimationEngine::new("rust async executor and rpg!")?;
     engine.load_animation_yaml("anim0", "animation/anim0.yml")?;
     engine.load_animation_yaml("anim1", "animation/anim1.yml")?;
     engine.load_image("img0", "/image/img0.png")?;

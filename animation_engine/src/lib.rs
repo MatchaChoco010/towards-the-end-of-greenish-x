@@ -6,5 +6,6 @@ mod key_input_state;
 mod render;
 
 pub use engine::*;
+pub use executor;
 pub use ggez::event::KeyCode;
 pub use ggez::GameResult;
