@@ -458,7 +458,7 @@ impl AnimationEngine {
         })
     }
 
-    pub fn load_animation_json(
+    pub fn load_animation_yaml(
         &mut self,
         name: impl ToString,
         path: impl AsRef<Path>,
@@ -476,7 +476,7 @@ impl AnimationEngine {
             .resources
             .get_mut::<AnimationStore>()
             .unwrap()
-            .load_animation_json(name, path)
+            .load_animation_yaml(name, path)
     }
 
     pub fn load_image(

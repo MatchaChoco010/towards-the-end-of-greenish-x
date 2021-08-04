@@ -11,9 +11,9 @@ async-feature = [ "executor" ]
 animation_engine_macro = { path = "../animation_engine_macro" }
 anyhow = "1.0.41"
 executor = { path = "../executor", optional = true }
-ggez = "0.6.0-rc2"
+ggez = "0.6.0"
 legion = "0.4.0"
 serde = { version = "1.0.126", features = ["derive"] }
-serde_json = "1.0.64"
+serde_yaml = "0.8.17"
 thiserror = "1.0.26"
 uuid = { version = "0.8.2", features = ["v4"] }

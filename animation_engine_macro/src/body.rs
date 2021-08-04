@@ -535,10 +535,10 @@ pub fn anim_components(input: TokenStream) -> TokenStream {
                             }
                         }
 
-                        pub fn load_animation_json(&mut self, name: impl ToString, path: &::std::path::Path) -> ::anyhow::Result<()> {
+                        pub fn load_animation_yaml(&mut self, name: impl ToString, path: &::std::path::Path) -> ::anyhow::Result<()> {
                             let file = ::std::fs::File::open(path)?;
                             let reader = ::std::io::BufReader::new(file);
-                            let anim_data: EntityAnimationSerializeData = serde_json::from_reader(reader)?;
+                            let anim_data: EntityAnimationSerializeData = serde_yaml::from_reader(reader)?;
 
                             let mut data = vec![];
                             for d in anim_data.data {

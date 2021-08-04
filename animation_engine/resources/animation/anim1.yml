@@ -1,0 +1,25 @@
+len: 100
+fps: 30.0
+data:
+  - - Position_x
+    - keys:
+        - frame: 1
+          value: 750.0
+        - frame: 100
+          value: 0.0
+  - - Position_y
+    - keys:
+        - frame: 1
+          value: 0.0
+        - frame: 50
+          value: 600.0
+        - frame: 100
+          value: 0.0
+  - - Color_r
+    - keys:
+        - frame: 1
+          value: 1.0
+        - frame: 50
+          value: 0.0
+        - frame: 100
+          value: 1.0

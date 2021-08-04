@@ -90,8 +90,8 @@ async fn game(mut cx: AnimationEngineContext) {
 
 fn main() -> anyhow::Result<()> {
     let mut engine = AnimationEngine::new()?;
-    engine.load_animation_json("anim0", "animation/anim0.json")?;
-    engine.load_animation_json("anim1", "animation/anim1.json")?;
+    engine.load_animation_yaml("anim0", "animation/anim0.yml")?;
+    engine.load_animation_yaml("anim1", "animation/anim1.yml")?;
     engine.load_image("img0", "/image/img0.png")?;
     engine.load_bgm("bgm0", "/audio/bgm0.ogg")?;
     engine.load_bgm("bgm1", "/audio/bgm1.ogg")?;
