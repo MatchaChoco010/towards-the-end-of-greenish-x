@@ -1,0 +1,74 @@
+[config]
+default_to_workspace = false
+
+[tasks.clean-archive]
+script_runner = "@duckscript"
+script = '''
+rm -r ./archive
+rm ./archive.zip
+'''
+
+[tasks.mkdir-archive]
+dependencies = ["clean-archive"]
+script_runner = "@duckscript"
+script = '''
+mkdir ./archive
+'''
+
+[tasks.build-executable]
+command = "cargo"
+args = ["build", "--release", "-p", "rpg"]
+
+[tasks.copy-executable]
+dependencies = ["mkdir-archive", "build-executable"]
+script_runner = "@duckscript"
+script = '''
+mkdir ./archive
+cp ./target/release/rpg.exe ./archive/game.exe
+'''
+
+[tasks.generate-assets]
+dependencies = ["mkdir-archive"]
+script_runner = "@rust"
+script = '''
+//! ```cargo
+//! [dependencies]
+//! zip = "0.5.13"
+//! zip-extensions = "0.6.1"
+//! ```
+use zip_extensions::*;
+fn main() {
+    let path = std::path::PathBuf::from("./rpg/resources/");
+    let file = std::fs::File::create("./archive/resources.zip").unwrap();
+    let mut zip = zip::ZipWriter::new(file);
+    let options = zip::write::FileOptions::default()
+        .compression_method(zip::CompressionMethod::Bzip2);
+    zip.create_from_directory_with_options(&path, options).unwrap();
+}
+'''
+
+[tasks.generate-archive]
+dependencies = ["copy-executable", "generate-assets"]
+script_runner = "@rust"
+script = '''
+//! ```cargo
+//! [dependencies]
+//! zip = "0.5.13"
+//! zip-extensions = "0.6.1"
+//! ```
+use zip_extensions::*;
+fn main() {
+    let path = std::path::PathBuf::from("./archive/");
+    let file = std::fs::File::create("./archive.zip").unwrap();
+    let mut zip = zip::ZipWriter::new(file);
+    let options = zip::write::FileOptions::default()
+        .compression_method(zip::CompressionMethod::Bzip2);
+    zip.create_from_directory_with_options(&path, options).unwrap();
+}
+'''
+
+[tasks.default]
+alias = "generate-archive"
+
+[tasks.clean]
+alias = "clean-archive"
