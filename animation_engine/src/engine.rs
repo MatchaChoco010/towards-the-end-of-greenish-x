@@ -458,6 +458,38 @@ impl EventHandler<GameError> for AnimationEngineContext {
     }
 }
 
+pub struct FileSystem<'a> {
+    ctx: &'a mut Context,
+}
+impl<'a> FileSystem<'a> {
+    fn new(ctx: &'a mut Context) -> Self {
+        Self { ctx }
+    }
+
+    pub fn exists(&mut self, path: impl AsRef<Path>) -> bool {
+        filesystem::exists(&mut self.ctx, path)
+    }
+
+    pub fn is_dir(&mut self, path: impl AsRef<Path>) -> bool {
+        filesystem::is_dir(&mut self.ctx, path)
+    }
+
+    pub fn is_file(&mut self, path: impl AsRef<Path>) -> bool {
+        filesystem::is_file(&mut self.ctx, path)
+    }
+
+    pub fn open(&mut self, path: impl AsRef<Path>) -> anyhow::Result<ggez::filesystem::File> {
+        Ok(filesystem::open(&mut self.ctx, path)?)
+    }
+
+    pub fn read_dir(
+        &mut self,
+        path: impl AsRef<Path>,
+    ) -> anyhow::Result<impl Iterator<Item = std::path::PathBuf>> {
+        Ok(filesystem::read_dir(&mut self.ctx, path)?)
+    }
+}
+
 pub struct AnimationEngine {
     inner: AnimationEngineContext,
     ctx: Context,
@@ -465,15 +497,7 @@ pub struct AnimationEngine {
 }
 impl AnimationEngine {
     pub fn new(title: impl ToString) -> anyhow::Result<Self> {
-        let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-            let mut path = path::PathBuf::from(manifest_dir);
-            path.push("resources");
-            path
-        } else {
-            path::PathBuf::from("./resources")
-        };
-
-        let cb = ContextBuilder::new("Sample Game", "Orito Itsuki")
+        let mut cb = ContextBuilder::new("Sample Game", "Orito Itsuki")
             .window_setup(ggez::conf::WindowSetup {
                 title: title.to_string(),
                 icon: "/icon.png".to_string(),
@@ -483,8 +507,12 @@ impl AnimationEngine {
                 width: 1280.0,
                 height: 720.0,
                 ..Default::default()
-            })
-            .add_resource_path(resource_dir);
+            });
+        if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+            let mut path = path::PathBuf::from(manifest_dir);
+            path.push("resources");
+            cb = cb.add_resource_path(path);
+        }
 
         let (ctx, events_loop) = cb.build().expect("Failed to create event loop");
 
@@ -497,25 +525,22 @@ impl AnimationEngine {
         })
     }
 
+    pub fn filesystem(&mut self) -> FileSystem {
+        FileSystem::new(&mut self.ctx)
+    }
+
     pub fn load_animation_yaml(
         &mut self,
         name: impl ToString,
         path: impl AsRef<Path>,
     ) -> anyhow::Result<()> {
-        let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-            let mut path = path::PathBuf::from(manifest_dir);
-            path.push("resources");
-            path
-        } else {
-            path::PathBuf::from("./resources")
-        };
-        let path = &resource_dir.join(path);
+        let reader = self.filesystem().open(path)?;
         self.inner
             .get_mut()
             .resources
             .get_mut::<AnimationStore>()
             .unwrap()
-            .load_animation_yaml(name, path)
+            .load_animation_yaml(name, reader)
     }
 
     pub fn load_image(
