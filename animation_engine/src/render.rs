@@ -4,7 +4,8 @@ use ggez::*;
 use legion::*;
 
 pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) -> GameResult {
-    graphics::clear(ctx, graphics::Color::WHITE);
+    let clear_color = *resources.get::<graphics::Color>().unwrap();
+    graphics::clear(ctx, clear_color);
 
     let image_store = resources.get::<ImageStore>().unwrap();
     let font = resources.get::<graphics::Font>().unwrap();

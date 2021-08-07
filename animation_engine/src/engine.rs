@@ -140,6 +140,7 @@ impl AnimationEngineContext {
         resources.insert::<AnimationStore>(AnimationStore::new());
         resources.insert::<ImageStore>(ImageStore::new());
         resources.insert::<AudioStore>(AudioStore::new());
+        resources.insert::<graphics::Color>(graphics::Color::WHITE);
 
         Self(Rc::new(RefCell::new(AnimationEngineInner {
             current_time: Instant::now(),
@@ -340,6 +341,14 @@ impl AnimationEngineContext {
             next_frame().await;
         }
         Ok(())
+    }
+
+    pub fn change_clear_color(&self, clear_color: (u8, u8, u8)) {
+        *self
+            .get_mut()
+            .resources
+            .get_mut::<graphics::Color>()
+            .unwrap() = graphics::Color::from(clear_color);
     }
 }
 impl EventHandler<GameError> for AnimationEngineContext {
