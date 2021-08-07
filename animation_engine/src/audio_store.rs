@@ -3,12 +3,18 @@ use ggez::*;
 use std::collections::{HashMap, VecDeque};
 use std::path::Path;
 
+pub enum AudioPlayOption {
+    Play,
+    Resume,
+}
+
 pub struct AudioStore {
     sfx_hashmap: HashMap<String, Source>,
     sfx_queue: VecDeque<String>,
     bgm_hashmap: HashMap<String, Source>,
-    next_bgm: Option<String>,
+    next_bgm: Option<(String, AudioPlayOption)>,
     current_bgm: Option<String>,
+    bgm_volume: f32,
 }
 impl AudioStore {
     pub fn new() -> Self {
@@ -18,6 +24,7 @@ impl AudioStore {
             bgm_hashmap: HashMap::new(),
             next_bgm: None,
             current_bgm: None,
+            bgm_volume: 1.0,
         }
     }
 
@@ -37,9 +44,10 @@ impl AudioStore {
         ctx: &mut Context,
         name: impl ToString,
         path: impl AsRef<Path>,
+        repeat: bool,
     ) -> GameResult {
         let mut source = Source::new(ctx, path)?;
-        source.set_repeat(true);
+        source.set_repeat(repeat);
         self.bgm_hashmap.insert(name.to_string(), source);
         Ok(())
     }
@@ -48,8 +56,16 @@ impl AudioStore {
         self.sfx_queue.push_back(name.to_string());
     }
 
-    pub fn set_bgm(&mut self, name: impl ToString) {
-        self.next_bgm = Some(name.to_string());
+    pub fn set_bgm(&mut self, name: impl ToString, option: AudioPlayOption) {
+        self.next_bgm = Some((name.to_string(), option));
+    }
+
+    pub fn get_bgm_volume(&self) -> f32 {
+        self.bgm_volume
+    }
+
+    pub fn set_bgm_volume(&mut self, volume: f32) {
+        self.bgm_volume = volume;
     }
 
     pub fn update(&mut self, ctx: &mut Context) -> GameResult {
@@ -63,7 +79,7 @@ impl AudioStore {
         }
 
         // bgm
-        if let Some(bgm_name) = self.next_bgm.take() {
+        if let Some((bgm_name, option)) = self.next_bgm.take() {
             if let Some(current_bgm_name) = self.current_bgm.take() {
                 let source = self
                     .bgm_hashmap
@@ -77,11 +93,28 @@ impl AudioStore {
                 .get_mut(&bgm_name)
                 .expect(&format!("No such audio: {}", bgm_name));
             if source.paused() {
-                source.resume();
+                match option {
+                    AudioPlayOption::Play => {
+                        source.stop(ctx)?;
+                        source.play(ctx)?;
+                    }
+                    AudioPlayOption::Resume => {
+                        source.resume();
+                    }
+                }
             } else {
                 source.play(ctx)?;
             }
+
             self.current_bgm = Some(bgm_name);
+        }
+        // update bgm volume
+        if let Some(current_bgm_name) = self.current_bgm.as_ref() {
+            let source = self
+                .bgm_hashmap
+                .get_mut(current_bgm_name)
+                .expect(&format!("No such audio: {}", current_bgm_name));
+            source.set_volume(self.bgm_volume);
         }
 
         Ok(())

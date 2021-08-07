@@ -280,7 +280,31 @@ impl AnimationEngineContext {
             .resources
             .get_mut::<AudioStore>()
             .unwrap()
-            .set_bgm(name);
+            .set_bgm(name, AudioPlayOption::Play);
+    }
+
+    pub fn resume_or_play_bgm(&mut self, name: impl ToString) {
+        self.get_mut()
+            .resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .set_bgm(name, AudioPlayOption::Resume);
+    }
+
+    pub fn get_bgm_volume(&self) -> f32 {
+        self.get()
+            .resources
+            .get::<AudioStore>()
+            .unwrap()
+            .get_bgm_volume()
+    }
+
+    pub fn set_bgm_volume(&mut self, volume: f32) {
+        self.get_mut()
+            .resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .set_bgm_volume(volume);
     }
 
     pub fn play_sfx(&mut self, name: impl ToString) {
@@ -566,13 +590,18 @@ impl AnimationEngine {
         Ok(())
     }
 
-    pub fn load_bgm(&mut self, name: impl ToString, path: impl AsRef<Path>) -> anyhow::Result<()> {
+    pub fn load_bgm(
+        &mut self,
+        name: impl ToString,
+        path: impl AsRef<Path>,
+        repeat: bool,
+    ) -> anyhow::Result<()> {
         self.inner
             .get_mut()
             .resources
             .get_mut::<AudioStore>()
             .unwrap()
-            .load_bgm(&mut self.ctx, name, path)?;
+            .load_bgm(&mut self.ctx, name, path, repeat)?;
         Ok(())
     }
 
