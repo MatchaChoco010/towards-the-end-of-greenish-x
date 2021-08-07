@@ -1,5 +1,6 @@
 use crate::animation_components::*;
 use crate::audio_store::*;
+use crate::font_store::*;
 use crate::image_store::*;
 use crate::key_input_state::*;
 use crate::render::*;
@@ -88,6 +89,7 @@ pub struct AddTextInfo {
     pub g: f32,
     pub b: f32,
     pub a: f32,
+    pub font_name: String,
     pub text: String,
     pub font_size: f32,
 }
@@ -103,6 +105,7 @@ impl Default for AddTextInfo {
             g: 1.0,
             b: 1.0,
             a: 1.0,
+            font_name: "".to_string(),
             text: "Hello World!".to_string(),
             font_size: 24.0,
         }
@@ -140,6 +143,7 @@ impl AnimationEngineContext {
         resources.insert::<AnimationStore>(AnimationStore::new());
         resources.insert::<ImageStore>(ImageStore::new());
         resources.insert::<AudioStore>(AudioStore::new());
+        resources.insert::<FontStore>(FontStore::new());
         resources.insert::<graphics::Color>(graphics::Color::WHITE);
 
         Self(Rc::new(RefCell::new(AnimationEngineInner {
@@ -223,6 +227,7 @@ impl AnimationEngineContext {
             g,
             b,
             a,
+            font_name,
             text,
             font_size,
         } = info;
@@ -232,7 +237,11 @@ impl AnimationEngineContext {
             Rotation { rotation },
             Color { r, g, b },
             Opacity { opacity: a },
-            Renderable::Text { text, font_size },
+            Renderable::Text {
+                font_name,
+                text,
+                font_size,
+            },
         ))
     }
 
@@ -350,6 +359,23 @@ impl AnimationEngineContext {
             .get_mut::<graphics::Color>()
             .unwrap() = graphics::Color::from(clear_color);
     }
+
+    pub fn load_font(&mut self, name: impl ToString, path: impl AsRef<Path>) {
+        self.get_mut()
+            .resources
+            .get_mut::<FontStore>()
+            .unwrap()
+            .add_font_to_load_queue(name, path);
+    }
+
+    pub fn unload_font(&mut self, name: impl ToString) -> anyhow::Result<()> {
+        self.get_mut()
+            .resources
+            .get_mut::<FontStore>()
+            .unwrap()
+            .unload_font(name)?;
+        Ok(())
+    }
 }
 impl EventHandler<GameError> for AnimationEngineContext {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
@@ -372,6 +398,13 @@ impl EventHandler<GameError> for AnimationEngineContext {
             update(self);
             self.get_mut().update_function = Some(update);
         }
+
+        // Load Font
+        self.get_mut()
+            .resources
+            .get_mut::<FontStore>()
+            .unwrap()
+            .update(ctx)?;
 
         // Reset Key Input
         self.get_mut().key_input.reset_current_frame_input();
@@ -453,13 +486,9 @@ impl AnimationEngine {
             })
             .add_resource_path(resource_dir);
 
-        let (mut ctx, events_loop) = cb.build().expect("Failed to create event loop");
+        let (ctx, events_loop) = cb.build().expect("Failed to create event loop");
 
         let inner = AnimationEngineContext::new();
-
-        inner.get_mut().resources.insert::<graphics::Font>(
-            graphics::Font::new(&mut ctx, "/font/07LogoTypeGothic-Condense.ttf").unwrap(),
-        );
 
         Ok(Self {
             inner,
@@ -519,6 +548,16 @@ impl AnimationEngine {
             .get_mut::<AudioStore>()
             .unwrap()
             .load_bgm(&mut self.ctx, name, path)?;
+        Ok(())
+    }
+
+    pub fn load_font(&mut self, name: impl ToString, path: impl AsRef<Path>) -> anyhow::Result<()> {
+        self.inner
+            .get_mut()
+            .resources
+            .get_mut::<FontStore>()
+            .unwrap()
+            .load_font(&mut self.ctx, name, path)?;
         Ok(())
     }
 

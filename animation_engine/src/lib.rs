@@ -1,6 +1,7 @@
 mod animation_components;
 mod audio_store;
 mod engine;
+mod font_store;
 mod image_store;
 mod key_input_state;
 mod render;

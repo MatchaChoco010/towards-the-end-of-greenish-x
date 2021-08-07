@@ -1,5 +1,6 @@
 use crate::animation_components::*;
-use crate::image_store::ImageStore;
+use crate::font_store::*;
+use crate::image_store::*;
 use ggez::*;
 use legion::*;
 
@@ -8,7 +9,7 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
     graphics::clear(ctx, clear_color);
 
     let image_store = resources.get::<ImageStore>().unwrap();
-    let font = resources.get::<graphics::Font>().unwrap();
+    let font_store = resources.get::<FontStore>().unwrap();
 
     let mut renderable_data = <(
         &Position,
@@ -56,8 +57,13 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
                     .color(color);
                 graphics::draw(ctx, image, draw_param)?;
             }
-            Renderable::Text { text, font_size } => {
+            Renderable::Text {
+                font_name,
+                text,
+                font_size,
+            } => {
                 let mut text = graphics::Text::new(text.to_string());
+                let font = font_store.get_font(font_name)?;
                 text.set_font(font.to_owned(), graphics::PxScale::from(*font_size));
                 let color = graphics::Color::new(r, g, b, opacity);
                 let draw_param = graphics::DrawParam::new()

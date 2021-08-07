@@ -15,6 +15,7 @@ async fn game(mut cx: AnimationEngineContext) {
         ..Default::default()
     });
     let _ = cx.add_text(AddTextInfo {
+        font_name: "/font/07LogoTypeGothic-Condense.ttf".to_string(),
         text: "こんにちは、世界".to_string(),
         x: 400.0 - 100.0,
         y: 300.0 + 64.0,
@@ -96,5 +97,9 @@ fn main() -> anyhow::Result<()> {
     engine.load_bgm("bgm0", "/audio/bgm0.ogg")?;
     engine.load_bgm("bgm1", "/audio/bgm1.ogg")?;
     engine.load_sfx("sfx0", "/audio/fx0.ogg")?;
+    engine.load_font(
+        "/font/07LogoTypeGothic-Condense.ttf",
+        "/font/07LogoTypeGothic-Condense.ttf",
+    )?;
     engine.run_with_async_func(game)
 }

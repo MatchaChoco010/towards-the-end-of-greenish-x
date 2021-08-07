@@ -55,6 +55,7 @@ anim_components! {
             height: f32,
         },
         Text {
+            font_name: String,
             text: String,
             font_size: f32,
         },
