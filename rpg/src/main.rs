@@ -2,11 +2,10 @@ use animation_engine::executor::*;
 use animation_engine::*;
 use chrono;
 use fern;
+use futures::{select, FutureExt};
 use log::{info, trace};
-use path_slash::PathExt;
-use std::env;
-use std::fs;
-use std::path;
+use serde::Deserialize;
+use std::path::{Path, PathBuf};
 
 fn init_logger() {
     let base_config = fern::Dispatch::new();
@@ -46,38 +45,34 @@ fn init_logger() {
         .unwrap();
 }
 
+#[derive(Deserialize)]
+struct Bgm {
+    name: String,
+    path: PathBuf,
+    #[serde(rename = "loop")]
+    is_loop: bool,
+}
+
+#[derive(Deserialize)]
+struct BgmList(Vec<Bgm>);
+
 fn load_bgm(engine: &mut AnimationEngine) -> anyhow::Result<()> {
     trace!("Start loading bgm...");
 
-    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        trace!("\tin manifest dir");
+    let file = engine.filesystem().open("/audio/bgm/bgm-list.yml")?;
+    let reader = std::io::BufReader::new(file);
+    let list: BgmList = serde_yaml::from_reader(reader)?;
+    for bgm in list.0 {
+        let filepath = Path::new("/audio/bgm/").join(bgm.path);
 
-        let mut path = path::PathBuf::from(manifest_dir);
-        path.push("resources");
-        path
-    } else {
-        trace!("\tin not manifest dir");
+        info!(
+            "[load bgm] name: {}, loop: {}, path: {}",
+            bgm.name,
+            bgm.is_loop,
+            filepath.clone().to_string_lossy()
+        );
 
-        path::PathBuf::from("./resources")
-    };
-
-    for item in fs::read_dir(resource_dir.join("audio").join("bgm"))? {
-        if let Ok(item) = item {
-            if item.file_type()?.is_file() {
-                let item_path = item.path();
-                let item_path = item_path.strip_prefix(&resource_dir)?;
-                let filepath = path::Path::new("/").join(item_path);
-                let name = item_path.to_slash_lossy();
-
-                info!(
-                    "[load bgm] key: {}, path: {}",
-                    name,
-                    filepath.to_string_lossy()
-                );
-
-                engine.load_bgm(name, filepath)?;
-            }
-        }
+        engine.load_bgm(bgm.name, filepath, bgm.is_loop)?;
     }
 
     trace!("Finish loading bgm!");
@@ -88,20 +83,44 @@ fn load_bgm(engine: &mut AnimationEngine) -> anyhow::Result<()> {
 async fn game(mut cx: AnimationEngineContext) {
     trace!("Start game!");
 
+    cx.change_clear_color((0, 0, 0));
+
+    spawn({
+        let mut cx = cx.clone();
+        async move {
+            let mut bgm_volume: f32 = 1.0;
+            loop {
+                select! {
+                    _ = cx.wait_key_down(KeyCode::Left).fuse() =>
+                        bgm_volume = (bgm_volume - 0.1).max(0.0),
+                    _ = cx.wait_key_down(KeyCode::Right).fuse() =>
+                        bgm_volume = (bgm_volume + 0.1).min(1.2),
+                }
+                cx.set_bgm_volume(bgm_volume);
+
+                info!("[change bgm volume] {}", bgm_volume);
+
+                next_frame().await;
+            }
+        }
+    });
+
     let mut bgm_index = 0;
     loop {
         cx.wait_key_down(KeyCode::Z).await;
         match bgm_index {
-            0 => cx.play_bgm("audio/bgm/field-0.ogg"),
-            1 => cx.play_bgm("audio/bgm/field-1.ogg"),
-            2 => cx.play_bgm("audio/bgm/battle-0.ogg"),
-            3 => cx.play_bgm("audio/bgm/game-over.ogg"),
+            0 => cx.play_bgm("title"),
+            1 => cx.play_bgm("opening"),
+            2 => cx.resume_or_play_bgm("field-0"),
+            3 => cx.resume_or_play_bgm("field-1"),
+            4 => cx.play_bgm("battle-0"),
+            5 => cx.play_bgm("game-over"),
             _ => unreachable!(),
         }
 
         info!("change bgm! bgm index: {}", bgm_index);
 
-        bgm_index = (bgm_index + 1) % 4;
+        bgm_index = (bgm_index + 1) % 6;
         next_frame().await;
     }
 }
@@ -111,5 +130,9 @@ fn main() -> anyhow::Result<()> {
 
     let mut engine = AnimationEngine::new("Towards The End of Greenish-X")?;
     load_bgm(&mut engine)?;
+    engine.load_font(
+        "07LogoTypeGothic-Condense",
+        "/font/LogoTypeGothicCondense/07LogoTypeGothic-Condense.ttf",
+    )?;
     engine.run_with_async_func(game)
 }
