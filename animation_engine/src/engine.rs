@@ -434,6 +434,7 @@ impl AnimationEngine {
         let cb = ContextBuilder::new("Sample Game", "Orito Itsuki")
             .window_setup(ggez::conf::WindowSetup {
                 title: title.to_string(),
+                icon: "/icon.png".to_string(),
                 ..Default::default()
             })
             .window_mode(ggez::conf::WindowMode {
