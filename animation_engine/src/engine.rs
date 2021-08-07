@@ -315,6 +315,22 @@ impl AnimationEngineContext {
             .push_sfx_to_queue(name);
     }
 
+    pub fn get_sfx_volume(&self) -> f32 {
+        self.get()
+            .resources
+            .get::<AudioStore>()
+            .unwrap()
+            .get_sfx_volume()
+    }
+
+    pub fn set_sfx_volume(&mut self, volume: f32) {
+        self.get_mut()
+            .resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .set_sfx_volume(volume);
+    }
+
     pub fn key_down(&self, key: KeyCode) -> bool {
         self.get().key_input.key_down(key)
     }

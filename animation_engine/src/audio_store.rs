@@ -11,6 +11,7 @@ pub enum AudioPlayOption {
 pub struct AudioStore {
     sfx_hashmap: HashMap<String, Source>,
     sfx_queue: VecDeque<String>,
+    sfx_volume: f32,
     bgm_hashmap: HashMap<String, Source>,
     next_bgm: Option<(String, AudioPlayOption)>,
     current_bgm: Option<String>,
@@ -21,6 +22,7 @@ impl AudioStore {
         Self {
             sfx_hashmap: HashMap::new(),
             sfx_queue: VecDeque::new(),
+            sfx_volume: 1.0,
             bgm_hashmap: HashMap::new(),
             next_bgm: None,
             current_bgm: None,
@@ -68,6 +70,14 @@ impl AudioStore {
         self.bgm_volume = volume;
     }
 
+    pub fn get_sfx_volume(&self) -> f32 {
+        self.sfx_volume
+    }
+
+    pub fn set_sfx_volume(&mut self, volume: f32) {
+        self.sfx_volume = volume;
+    }
+
     pub fn update(&mut self, ctx: &mut Context) -> GameResult {
         // sfx
         for sfx in self.sfx_queue.drain(0..) {
@@ -75,6 +85,7 @@ impl AudioStore {
                 .sfx_hashmap
                 .get_mut(&sfx)
                 .expect(&format!("No such audio: {}", sfx));
+            source.set_volume(self.sfx_volume);
             source.play_detached(ctx)?;
         }
 
