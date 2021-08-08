@@ -1,13 +1,14 @@
 use crate::animation_components::*;
 use crate::audio_store::*;
 use crate::font_store::*;
+use crate::gamepad_input_state::*;
 use crate::image_store::*;
 use crate::key_input_state::*;
 use crate::render::*;
 use anyhow::Result;
 #[cfg(feature = "async-feature")]
 use executor::*;
-use ggez::event::{self, EventHandler, EventLoop, KeyCode};
+use ggez::event::{self, Axis, Button, EventHandler, EventLoop, KeyCode};
 use ggez::*;
 use legion::*;
 use std::cell::{Ref, RefCell, RefMut};
@@ -131,6 +132,7 @@ pub struct AnimationEngineInner {
     schedule: Schedule,
     update_function: Option<Box<dyn FnMut(&mut AnimationEngineContext) -> ()>>,
     key_input: KeyInputState,
+    gamepad_input: GamepadInputState,
     quit_flag: bool,
 }
 impl AnimationEngineContext {
@@ -154,6 +156,7 @@ impl AnimationEngineContext {
             schedule,
             update_function: None,
             key_input: KeyInputState::new(),
+            gamepad_input: GamepadInputState::new(),
             quit_flag: false,
         })))
     }
@@ -370,6 +373,49 @@ impl AnimationEngineContext {
         }
     }
 
+    pub fn button_down(&self, button: Button) -> bool {
+        self.get().gamepad_input.button_down(button)
+    }
+
+    pub fn button_pressed(&self, button: Button) -> bool {
+        self.get().gamepad_input.button_pressed(button)
+    }
+
+    pub fn button_up(&self, button: Button) -> bool {
+        self.get().gamepad_input.button_up(button)
+    }
+
+    pub async fn wait_button_down(&self, button: Button) {
+        loop {
+            if self.get().gamepad_input.button_down(button) {
+                break;
+            }
+            next_frame().await;
+        }
+    }
+
+    pub async fn wait_button_pressed(&self, button: Button) {
+        loop {
+            if self.get().gamepad_input.button_pressed(button) {
+                break;
+            }
+            next_frame().await;
+        }
+    }
+
+    pub async fn wait_button_up(&self, button: Button) {
+        loop {
+            if self.get().gamepad_input.button_up(button) {
+                break;
+            }
+            next_frame().await;
+        }
+    }
+
+    pub fn axis(&self, axis: Axis) -> f32 {
+        self.get().gamepad_input.axis(&axis)
+    }
+
     pub fn start_animation(
         &mut self,
         entity: Entity,
@@ -448,6 +494,8 @@ impl EventHandler<GameError> for AnimationEngineContext {
 
         // Reset Key Input
         self.get_mut().key_input.reset_current_frame_input();
+        // Reset Button Input
+        self.get_mut().gamepad_input.reset_current_frame_input();
 
         // Update Animation
         {
@@ -491,9 +539,38 @@ impl EventHandler<GameError> for AnimationEngineContext {
         self.get_mut().key_input.set_up(keycode);
     }
 
+    fn gamepad_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: Button,
+        _id: event::GamepadId,
+    ) {
+        self.get_mut().gamepad_input.set_down(button);
+    }
+
+    fn gamepad_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: Button,
+        _id: event::GamepadId,
+    ) {
+        self.get_mut().gamepad_input.set_up(button);
+    }
+
+    fn gamepad_axis_event(
+        &mut self,
+        _ctx: &mut Context,
+        axis: Axis,
+        value: f32,
+        _id: event::GamepadId,
+    ) {
+        self.get_mut().gamepad_input.set_axis(axis, value);
+    }
+
     fn focus_event(&mut self, _ctx: &mut Context, gained: bool) {
         if gained {
             self.get_mut().key_input.reset();
+            self.get_mut().gamepad_input.reset();
         }
     }
 }
