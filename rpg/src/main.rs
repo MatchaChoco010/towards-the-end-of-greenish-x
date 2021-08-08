@@ -3,6 +3,7 @@ use animation_engine::*;
 mod assets_load;
 mod game;
 mod init_logger;
+mod input;
 
 fn main() -> anyhow::Result<()> {
     init_logger::init_logger();
