@@ -1,6 +1,7 @@
 use crate::animation_components::*;
 use crate::font_store::*;
 use crate::image_store::*;
+use crate::localize::*;
 use ggez::*;
 use legion::*;
 
@@ -57,11 +58,11 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
                     .color(color);
                 graphics::draw(ctx, image, draw_param)?;
             }
-            Renderable::Text {
-                font_name,
-                text,
-                font_size,
-            } => {
+            Renderable::Text { key, font_size } => {
+                let localize = resources
+                    .get::<Box<dyn Localize>>()
+                    .expect("Not set localize object!");
+                let LocalizeText { font_name, text } = localize.get(key);
                 let mut text = graphics::Text::new(text.to_string());
                 let font = font_store.get_font(font_name)?;
                 text.set_font(font.to_owned(), graphics::PxScale::from(*font_size));

@@ -16,8 +16,7 @@ async fn game(cx: AnimationEngineContext) {
         ..Default::default()
     });
     let _ = cx.add_text(AddTextInfo {
-        font_name: "07LogoTypeGothic-Condense".to_string(),
-        text: "こんにちは、世界".to_string(),
+        key: "#hello_world".into(),
         x: 400.0 - 100.0,
         y: 300.0 + 64.0,
         z: 15,
@@ -107,6 +106,16 @@ async fn game(cx: AnimationEngineContext) {
     }
 }
 
+struct Localize;
+impl animation_engine::Localize for Localize {
+    fn get(&self, _key: &str) -> LocalizeText {
+        LocalizeText::new(
+            "07LogoTypeGothic-Condense".into(),
+            "こんにちは、世界".into(),
+        )
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     let mut engine = AnimationEngine::new("rust async executor and rpg!")?;
     engine.load_animation_yaml("anim0", "/animation/anim0.yml")?;
@@ -119,5 +128,6 @@ fn main() -> anyhow::Result<()> {
         "07LogoTypeGothic-Condense",
         "/font/07LogoTypeGothic-Condense.ttf",
     )?;
+    engine.set_localize(Box::new(Localize));
     engine.run_with_async_func(game)
 }

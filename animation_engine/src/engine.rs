@@ -4,6 +4,7 @@ use crate::font_store::*;
 use crate::gamepad_input_state::*;
 use crate::image_store::*;
 use crate::key_input_state::*;
+use crate::localize::Localize;
 use crate::render::*;
 use anyhow::Result;
 #[cfg(feature = "async-feature")]
@@ -90,8 +91,7 @@ pub struct AddTextInfo {
     pub g: f32,
     pub b: f32,
     pub a: f32,
-    pub font_name: String,
-    pub text: String,
+    pub key: String,
     pub font_size: f32,
 }
 impl Default for AddTextInfo {
@@ -106,8 +106,7 @@ impl Default for AddTextInfo {
             g: 1.0,
             b: 1.0,
             a: 1.0,
-            font_name: "".to_string(),
-            text: "Hello World!".to_string(),
+            key: "".to_string(),
             font_size: 24.0,
         }
     }
@@ -230,8 +229,7 @@ impl AnimationEngineContext {
             g,
             b,
             a,
-            font_name,
-            text,
+            key,
             font_size,
         } = info;
         self.get_mut().world.push((
@@ -240,11 +238,7 @@ impl AnimationEngineContext {
             Rotation { rotation },
             Color { r, g, b },
             Opacity { opacity: a },
-            Renderable::Text {
-                font_name,
-                text,
-                font_size,
-            },
+            Renderable::Text { key, font_size },
         ))
     }
 
@@ -706,6 +700,13 @@ impl AnimationEngine {
             .unwrap()
             .load_font(&mut self.ctx, name, path)?;
         Ok(())
+    }
+
+    pub fn set_localize(&self, localize: Box<dyn Localize>) {
+        self.inner
+            .get_mut()
+            .resources
+            .insert::<Box<dyn Localize>>(localize);
     }
 
     pub fn get_context(&mut self) -> &mut AnimationEngineContext {
