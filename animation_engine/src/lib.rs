@@ -10,4 +10,4 @@ mod render;
 pub use engine::*;
 pub use executor;
 pub use ggez::event::{Axis, Button, KeyCode};
-pub use ggez::GameResult;
+pub use legion::Entity;

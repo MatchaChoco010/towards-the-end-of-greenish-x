@@ -161,11 +161,11 @@ impl AnimationEngineContext {
         })))
     }
 
-    pub fn quit(&mut self) {
+    pub fn quit(&self) {
         self.get_mut().quit_flag = true;
     }
 
-    pub fn add_rect(&mut self, info: AddRectInfo) -> Entity {
+    pub fn add_rect(&self, info: AddRectInfo) -> Entity {
         let AddRectInfo {
             x,
             y,
@@ -189,7 +189,7 @@ impl AnimationEngineContext {
         ))
     }
 
-    pub fn add_image(&mut self, info: AddImageInfo) -> Entity {
+    pub fn add_image(&self, info: AddImageInfo) -> Entity {
         let AddImageInfo {
             x,
             y,
@@ -219,7 +219,7 @@ impl AnimationEngineContext {
         ))
     }
 
-    pub fn add_text(&mut self, info: AddTextInfo) -> Entity {
+    pub fn add_text(&self, info: AddTextInfo) -> Entity {
         let AddTextInfo {
             x,
             y,
@@ -248,11 +248,11 @@ impl AnimationEngineContext {
         ))
     }
 
-    pub fn delete_entity(&mut self, entity: Entity) {
+    pub fn delete_entity(&self, entity: Entity) {
         self.get_mut().world.remove(entity);
     }
 
-    pub fn set_width(&mut self, entity: Entity, width: f32) -> anyhow::Result<()> {
+    pub fn set_width(&self, entity: Entity, width: f32) -> anyhow::Result<()> {
         match self
             .get_mut()
             .world
@@ -266,7 +266,7 @@ impl AnimationEngineContext {
         Ok(())
     }
 
-    pub fn set_position(&mut self, entity: Entity, x: f32, y: f32, z: u32) -> anyhow::Result<()> {
+    pub fn set_position(&self, entity: Entity, x: f32, y: f32, z: u32) -> anyhow::Result<()> {
         let mut this = self.get_mut();
         let mut entry = this.world.entry_mut(entity)?;
         let pos = entry
@@ -278,7 +278,7 @@ impl AnimationEngineContext {
         Ok(())
     }
 
-    pub fn play_bgm(&mut self, name: impl ToString) {
+    pub fn play_bgm(&self, name: impl ToString) {
         self.get_mut()
             .resources
             .get_mut::<AudioStore>()
@@ -286,7 +286,7 @@ impl AnimationEngineContext {
             .set_bgm(name, AudioPlayOption::Play);
     }
 
-    pub fn resume_or_play_bgm(&mut self, name: impl ToString) {
+    pub fn resume_or_play_bgm(&self, name: impl ToString) {
         self.get_mut()
             .resources
             .get_mut::<AudioStore>()
@@ -302,7 +302,7 @@ impl AnimationEngineContext {
             .get_bgm_volume()
     }
 
-    pub fn set_bgm_volume(&mut self, volume: f32) {
+    pub fn set_bgm_volume(&self, volume: f32) {
         self.get_mut()
             .resources
             .get_mut::<AudioStore>()
@@ -310,7 +310,7 @@ impl AnimationEngineContext {
             .set_bgm_volume(volume);
     }
 
-    pub fn play_sfx(&mut self, name: impl ToString) {
+    pub fn play_sfx(&self, name: impl ToString) {
         self.get_mut()
             .resources
             .get_mut::<AudioStore>()
@@ -326,7 +326,7 @@ impl AnimationEngineContext {
             .get_sfx_volume()
     }
 
-    pub fn set_sfx_volume(&mut self, volume: f32) {
+    pub fn set_sfx_volume(&self, volume: f32) {
         self.get_mut()
             .resources
             .get_mut::<AudioStore>()
@@ -417,7 +417,7 @@ impl AnimationEngineContext {
     }
 
     pub fn start_animation(
-        &mut self,
+        &self,
         entity: Entity,
         name: impl ToString,
     ) -> Result<AnimationFinishChecker> {
@@ -427,7 +427,7 @@ impl AnimationEngineContext {
     }
 
     #[cfg(feature = "async-feature")]
-    pub async fn play_animation(&mut self, entity: Entity, name: impl ToString) -> Result<()> {
+    pub async fn play_animation(&self, entity: Entity, name: impl ToString) -> Result<()> {
         let mut checker = self.start_animation(entity, name)?;
         loop {
             if checker.is_finished() {
@@ -734,7 +734,7 @@ impl AnimationEngine {
             }
         });
         self.inner.get_mut().update_function = Some(Box::new({
-            let mut inner = self.inner.clone();
+            let inner = self.inner.clone();
             move |cx| {
                 let delta_time = cx.get().delta_time;
                 match step(delta_time) {

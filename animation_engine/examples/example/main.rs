@@ -2,7 +2,7 @@ use animation_engine::*;
 use executor::*;
 use futures::{select, FutureExt};
 
-async fn game(mut cx: AnimationEngineContext) {
+async fn game(cx: AnimationEngineContext) {
     let _entity = cx.add_image(AddImageInfo {
         name: "img0".to_string(),
         x: 400.0 - 64.0,
@@ -41,7 +41,7 @@ async fn game(mut cx: AnimationEngineContext) {
     cx.play_bgm("bgm0");
 
     spawn({
-        let mut cx = cx.clone();
+        let cx = cx.clone();
         async move {
             loop {
                 cx.wait_key_down(KeyCode::X).await;
@@ -52,7 +52,7 @@ async fn game(mut cx: AnimationEngineContext) {
     });
 
     spawn({
-        let mut cx = cx.clone();
+        let cx = cx.clone();
         async move {
             loop {
                 cx.wait_key_down(KeyCode::C).await;
@@ -69,7 +69,7 @@ async fn game(mut cx: AnimationEngineContext) {
     });
 
     spawn({
-        let mut cx = cx.clone();
+        let cx = cx.clone();
         async move {
             cx.wait_key_down(KeyCode::Q).await;
             cx.quit();
@@ -77,7 +77,7 @@ async fn game(mut cx: AnimationEngineContext) {
     });
 
     spawn({
-        let mut cx = cx.clone();
+        let cx = cx.clone();
         async move {
             let mut bgm_volume: f32 = 1.0;
             loop {
