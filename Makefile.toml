@@ -23,8 +23,14 @@ args = ["build", "--release", "-p", "rpg"]
 dependencies = ["mkdir-archive", "build-executable"]
 script_runner = "@duckscript"
 script = '''
-mkdir ./archive
 cp ./target/release/rpg.exe ./archive/game.exe
+'''
+
+[tasks.copy-i18n-directory]
+dependencies = ["mkdir-archive", "build-executable"]
+script_runner = "@duckscript"
+script = '''
+cp ./target/release/i18n ./archive/
 '''
 
 [tasks.generate-assets]
@@ -48,7 +54,11 @@ fn main() {
 '''
 
 [tasks.generate-archive]
-dependencies = ["copy-executable", "generate-assets"]
+dependencies = [
+    "copy-executable",
+    "copy-i18n-directory",
+    "generate-assets"
+]
 script_runner = "@rust"
 script = '''
 //! ```cargo
