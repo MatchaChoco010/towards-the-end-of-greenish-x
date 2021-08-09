@@ -1,0 +1,10 @@
+# 日本語/Japanese
+# Original Language
+font-file: /font/LogoTypeGothicCondense/07LogoTypeGothic-Condense.ttf
+texts:
+  game-start: Game Start
+  monster-book: Monster Book
+  user-guide: User Guide
+  options: Options
+  exit: Exit
+  language: 日本語 (Original)

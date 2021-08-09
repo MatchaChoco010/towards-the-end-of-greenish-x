@@ -4,11 +4,11 @@ data:
   - - Position_x
     - keys:
         - frame: 60
-          value: 405.0
+          value: 425.0
   - - Position_y
     - keys:
         - frame: 60
-          value: 520.0
+          value: 425.0
   - - Opacity_opacity
     - keys:
         - frame: 61

@@ -1,3 +1,4 @@
+use animation_engine::executor::*;
 use animation_engine::*;
 use futures::{select, try_join, FutureExt};
 use log::{info, trace};
@@ -26,6 +27,11 @@ struct TitleScene<'a> {
     part_10: Entity,
     part_11: Entity,
     cover: Entity,
+    text_game_start: Entity,
+    text_monster_book: Entity,
+    text_user_guide: Entity,
+    text_options: Entity,
+    text_exit: Entity,
 }
 impl<'a> TitleScene<'a> {
     fn new(cx: &'a AnimationEngineContext) -> Self {
@@ -111,6 +117,66 @@ impl<'a> TitleScene<'a> {
             z: 390,
             ..Default::default()
         });
+        let text_game_start = cx.add_text(AddTextInfo {
+            key: "game-start".into(),
+            font_size: 36.0,
+            x: 160.0 + 8.816349 * 4.0,
+            y: 375.0,
+            z: 350,
+            r: 212.0 / 255.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let text_monster_book = cx.add_text(AddTextInfo {
+            key: "monster-book".into(),
+            font_size: 36.0,
+            x: 160.0 + 8.816349 * 3.0,
+            y: 425.0,
+            z: 350,
+            r: 212.0 / 255.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let text_user_guide = cx.add_text(AddTextInfo {
+            key: "user-guide".into(),
+            font_size: 36.0,
+            x: 160.0 + 8.816349 * 2.0,
+            y: 475.0,
+            z: 350,
+            r: 212.0 / 255.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let text_options = cx.add_text(AddTextInfo {
+            key: "options".into(),
+            font_size: 36.0,
+            x: 160.0 + 8.816349,
+            y: 525.0,
+            z: 350,
+            r: 212.0 / 255.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let text_exit = cx.add_text(AddTextInfo {
+            key: "exit".into(),
+            font_size: 36.0,
+            x: 160.0,
+            y: 575.0,
+            z: 350,
+            r: 212.0 / 255.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
         Self {
             cx,
             bg,
@@ -128,6 +194,11 @@ impl<'a> TitleScene<'a> {
             part_10,
             part_11,
             cover,
+            text_game_start,
+            text_monster_book,
+            text_user_guide,
+            text_options,
+            text_exit,
         }
     }
 
@@ -168,6 +239,18 @@ impl<'a> TitleScene<'a> {
                 .play_animation(self.part_10, "/animation/title/part-10-enter.yml"),
             self.cx
                 .play_animation(self.part_11, "/animation/title/part-11-enter.yml"),
+            self.cx.play_animation(
+                self.text_game_start,
+                "/animation/title/menu-selected-enter.yml"
+            ),
+            self.cx
+                .play_animation(self.text_monster_book, "/animation/title/menu-enter.yml"),
+            self.cx
+                .play_animation(self.text_user_guide, "/animation/title/menu-enter.yml"),
+            self.cx
+                .play_animation(self.text_options, "/animation/title/menu-enter.yml"),
+            self.cx
+                .play_animation(self.text_exit, "/animation/title/menu-enter.yml"),
         )
         .expect("animation not found");
     }
@@ -184,13 +267,111 @@ impl<'a> TitleScene<'a> {
         self.cx.play_sfx("/audio/sfx/menu.ogg");
         self.enter_animation().await;
 
-        select! {
-            _ = input::wait_select_button(self.cx).fuse() => TitleResult::StartGame,
-            _ = input::wait_cancel_button(self.cx).fuse() => {
-                self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                self.fade_animation().await;
-                TitleResult::Exit
+        let mut index = 0;
+        loop {
+            match index {
+                0 => {
+                    self.cx
+                        .set_position(self.part_6, 173.0, 370.0, 340)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.part_7, 173.0, 370.0, 360)
+                        .unwrap();
+                    self.cx.set_opacity(self.text_game_start, 1.0).unwrap();
+                    self.cx.set_opacity(self.text_monster_book, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_user_guide, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_options, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_exit, 0.2).unwrap();
+                }
+                1 => {
+                    self.cx
+                        .set_position(self.part_6, 173.0 - 8.816349, 420.0, 340)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.part_7, 173.0 - 8.816349, 420.0, 360)
+                        .unwrap();
+                    self.cx.set_opacity(self.text_game_start, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_monster_book, 1.5).unwrap();
+                    self.cx.set_opacity(self.text_user_guide, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_options, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_exit, 0.2).unwrap();
+                }
+                2 => {
+                    self.cx
+                        .set_position(self.part_6, 173.0 - 8.816349 * 2.0, 470.0, 340)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.part_7, 173.0 - 8.816349 * 2.0, 470.0, 360)
+                        .unwrap();
+                    self.cx.set_opacity(self.text_game_start, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_monster_book, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_user_guide, 1.0).unwrap();
+                    self.cx.set_opacity(self.text_options, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_exit, 0.2).unwrap();
+                }
+                3 => {
+                    self.cx
+                        .set_position(self.part_6, 173.0 - 8.816349 * 3.0, 520.0, 340)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.part_7, 173.0 - 8.816349 * 3.0, 520.0, 360)
+                        .unwrap();
+                    self.cx.set_opacity(self.text_game_start, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_monster_book, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_user_guide, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_options, 1.0).unwrap();
+                    self.cx.set_opacity(self.text_exit, 0.2).unwrap();
+                }
+                4 => {
+                    self.cx
+                        .set_position(self.part_6, 173.0 - 8.816349 * 4.0, 570.0, 340)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.part_7, 173.0 - 8.816349 * 4.0, 570.0, 360)
+                        .unwrap();
+                    self.cx.set_opacity(self.text_game_start, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_monster_book, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_user_guide, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_options, 0.2).unwrap();
+                    self.cx.set_opacity(self.text_exit, 1.0).unwrap();
+                }
+                _ => unreachable!(),
             }
+            select! {
+                _ = input::wait_up(self.cx).fuse() => {
+                    index = (index - 1 + 5) % 5;
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                }
+                _ = input::wait_down(self.cx).fuse() => {
+                    index = (index + 1 + 5) % 5;
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                }
+                _ = input::wait_select_button(self.cx).fuse() => {
+                    match index {
+                        0 => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                            self.fade_animation().await;
+                            return TitleResult::StartGame;
+                        },
+                        1 => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                        },
+                        2 => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                        }
+                        3 => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                        }
+                        4 => {
+                            self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                            self.fade_animation().await;
+                            return TitleResult::Exit;
+                        },
+                        _ => unreachable!(),
+                    }
+                }
+            }
+            next_frame().await;
         }
     }
 
@@ -219,6 +400,12 @@ impl<'a> Drop for TitleScene<'a> {
         self.cx.delete_entity(self.part_9);
         self.cx.delete_entity(self.part_10);
         self.cx.delete_entity(self.part_11);
+        self.cx.delete_entity(self.cover);
+        self.cx.delete_entity(self.text_game_start);
+        self.cx.delete_entity(self.text_monster_book);
+        self.cx.delete_entity(self.text_user_guide);
+        self.cx.delete_entity(self.text_options);
+        self.cx.delete_entity(self.text_exit);
     }
 }
 

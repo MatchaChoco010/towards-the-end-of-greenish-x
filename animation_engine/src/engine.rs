@@ -272,6 +272,16 @@ impl AnimationEngineContext {
         Ok(())
     }
 
+    pub fn set_opacity(&self, entity: Entity, a: f32) -> anyhow::Result<()> {
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
+        let opacity = entry
+            .get_component_mut::<Opacity>()
+            .expect(&format!("Entity {:?} has no opacity component", entity));
+        opacity.opacity = a;
+        Ok(())
+    }
+
     pub fn play_bgm(&self, name: impl ToString) {
         self.get_mut()
             .resources
@@ -440,7 +450,7 @@ impl AnimationEngineContext {
             .unwrap() = graphics::Color::from(clear_color);
     }
 
-    pub fn load_font(&mut self, name: impl ToString, path: impl AsRef<Path>) {
+    pub fn load_font(&self, name: impl ToString, path: impl AsRef<Path>) {
         self.get_mut()
             .resources
             .get_mut::<FontStore>()
@@ -448,7 +458,7 @@ impl AnimationEngineContext {
             .add_font_to_load_queue(name, path);
     }
 
-    pub fn unload_font(&mut self, name: impl ToString) -> anyhow::Result<()> {
+    pub fn unload_font(&self, name: impl ToString) -> anyhow::Result<()> {
         self.get_mut()
             .resources
             .get_mut::<FontStore>()
