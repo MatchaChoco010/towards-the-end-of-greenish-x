@@ -3,6 +3,7 @@ use animation_engine::*;
 use futures::{select, try_join, FutureExt};
 use log::{info, trace};
 
+use crate::game::user_guide;
 use crate::input;
 
 pub enum TitleResult {
@@ -358,6 +359,7 @@ impl<'a> TitleScene<'a> {
                         },
                         2 => {
                             self.cx.play_sfx("/audio/sfx/select.ogg");
+                            user_guide::user_guide(self.cx).await
                         }
                         3 => {
                             self.cx.play_sfx("/audio/sfx/select.ogg");

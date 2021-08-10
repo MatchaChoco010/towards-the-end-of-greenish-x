@@ -1,4 +1,5 @@
 # 日本語/Japanese
+# Author: Orito Itsuki
 # Original Language
 font-file: /font/LogoTypeGothicCondense/07LogoTypeGothic-Condense.ttf
 texts:
@@ -7,4 +8,15 @@ texts:
   user-guide: User Guide
   options: Options
   exit: Exit
+  user-guide-title: 操作方法
+  user-guide-1: 決定/次へ進む
+  user-guide-2: キャンセル/閉じる
+  user-guide-3: カーソル移動
+  user-guide-4: メニュー/オプション
+  user-guide-5: (戦闘中) 敵情報表示/非表示
+  user-guide-6: (戦闘中) プレイヤー情報表示/非表示
+  user-guide-z: 決定/次へ進む
+  user-guide-x: キャンセル/閉じる
+  user-guide-c: メニュー/オプション
+  user-guide-arrow: カーソル移動
   language: 日本語 (Original)
