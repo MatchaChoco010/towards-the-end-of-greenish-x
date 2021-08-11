@@ -3,6 +3,8 @@ use animation_engine::*;
 use futures::{select, try_join, FutureExt};
 use log::{info, trace};
 
+use crate::game::game;
+use crate::game::options;
 use crate::game::user_guide;
 use crate::input;
 
@@ -263,7 +265,7 @@ impl<'a> TitleScene<'a> {
             .expect("animation not found");
     }
 
-    async fn main(&self) -> TitleResult {
+    async fn main<'b>(&self, global_data: &mut game::GlobalData<'b>) -> TitleResult {
         self.cx.play_bgm("title");
         self.cx.play_sfx("/audio/sfx/menu.ogg");
         self.enter_animation().await;
@@ -363,6 +365,7 @@ impl<'a> TitleScene<'a> {
                         }
                         3 => {
                             self.cx.play_sfx("/audio/sfx/select.ogg");
+                            options::options(self.cx, global_data).await;
                         }
                         4 => {
                             self.cx.play_sfx("/audio/sfx/cancel.ogg");
@@ -372,15 +375,19 @@ impl<'a> TitleScene<'a> {
                         _ => unreachable!(),
                     }
                 }
+                _ = input::wait_sub_button(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                    options::options(self.cx, global_data).await;
+                }
             }
             next_frame().await;
         }
     }
 
-    async fn start(&self) -> TitleResult {
+    async fn start<'b>(&self, global_data: &mut game::GlobalData<'b>) -> TitleResult {
         select! {
             _ = self.bg_loop_animation().fuse() => TitleResult::Exit,
-            result = self.main().fuse() => result,
+            result = self.main(global_data).fuse() => result,
         }
     }
 }
@@ -411,7 +418,10 @@ impl<'a> Drop for TitleScene<'a> {
     }
 }
 
-pub async fn title(cx: &AnimationEngineContext) -> TitleResult {
+pub async fn title(
+    cx: &AnimationEngineContext,
+    global_data: &mut game::GlobalData<'_>,
+) -> TitleResult {
     info!("Enter Title Scene!");
-    TitleScene::new(cx).start().await
+    TitleScene::new(cx).start(global_data).await
 }

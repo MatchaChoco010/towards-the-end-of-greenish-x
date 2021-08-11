@@ -5,6 +5,7 @@ mod game;
 mod init_logger;
 mod input;
 mod localization;
+mod save_data;
 
 fn main() -> anyhow::Result<()> {
     init_logger::init_logger();

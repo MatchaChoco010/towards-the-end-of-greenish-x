@@ -282,6 +282,19 @@ impl AnimationEngineContext {
         Ok(())
     }
 
+    pub fn set_text_key(&self, entity: Entity, new_key: impl ToString) -> anyhow::Result<()> {
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
+        let renderable = entry
+            .get_component_mut::<Renderable>()
+            .expect(&format!("Entity {:?} has no renderable component", entity));
+        match renderable {
+            Renderable::Text { key, .. } => *key = new_key.to_string(),
+            _ => panic!("Entity {:?} has no renderable::text component", entity),
+        }
+        Ok(())
+    }
+
     pub fn play_bgm(&self, name: impl ToString) {
         self.get_mut()
             .resources
