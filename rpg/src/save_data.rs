@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
 use std::io;
+use std::io::Seek;
 
 use crate::localization;
 
@@ -57,6 +58,7 @@ impl SaveData {
 
     pub fn save(&mut self) -> anyhow::Result<()> {
         info!("Save save_data.");
+        self.file.seek(io::SeekFrom::Start(0)).unwrap();
         let mut writer = io::BufWriter::new(&mut self.file);
         rmp_serde::encode::write(&mut writer, &self.data)?;
         Ok(())
