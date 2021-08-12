@@ -265,7 +265,7 @@ impl<'a> TitleScene<'a> {
             .expect("animation not found");
     }
 
-    async fn main<'b>(&self, global_data: &mut game::GlobalData<'b>) -> TitleResult {
+    async fn main(&self, global_data: &mut game::GlobalData) -> TitleResult {
         self.cx.play_bgm("title");
         self.cx.play_sfx("/audio/sfx/menu.ogg");
         self.enter_animation().await;
@@ -384,7 +384,7 @@ impl<'a> TitleScene<'a> {
         }
     }
 
-    async fn start<'b>(&self, global_data: &mut game::GlobalData<'b>) -> TitleResult {
+    async fn start(&self, global_data: &mut game::GlobalData) -> TitleResult {
         select! {
             _ = self.bg_loop_animation().fuse() => TitleResult::Exit,
             result = self.main(global_data).fuse() => result,
@@ -418,10 +418,7 @@ impl<'a> Drop for TitleScene<'a> {
     }
 }
 
-pub async fn title(
-    cx: &AnimationEngineContext,
-    global_data: &mut game::GlobalData<'_>,
-) -> TitleResult {
+pub async fn title(cx: &AnimationEngineContext, global_data: &mut game::GlobalData) -> TitleResult {
     info!("Enter Title Scene!");
     TitleScene::new(cx).start(global_data).await
 }

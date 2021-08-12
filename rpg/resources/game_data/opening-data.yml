@@ -1,0 +1,24 @@
+Random:
+  data:
+    - - 1.0
+      - Sequence:
+          data:
+            - Data:
+                data: opening-prologue-0-0
+            - Data:
+                data: opening-prologue-0-1
+            - Data:
+                data: opening-prologue-0-2
+            - Data:
+                data: opening-prologue-0-3
+    - - 1.0
+      - Sequence:
+          data:
+            - Data:
+                data: opening-prologue-1-0
+            - Data:
+                data: opening-prologue-1-1
+            - Data:
+                data: opening-prologue-1-2
+            - Data:
+                data: opening-prologue-1-3

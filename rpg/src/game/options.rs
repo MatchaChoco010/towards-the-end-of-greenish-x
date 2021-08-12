@@ -252,7 +252,7 @@ impl<'a> Options<'a> {
         trace!("Finish Options close animation");
     }
 
-    async fn start<'b>(&self, global_data: &mut game::GlobalData<'b>) {
+    async fn start(&self, global_data: &mut game::GlobalData) {
         self.cx.play_sfx("/audio/sfx/menu.ogg");
         self.cx
             .set_text_key(
@@ -408,7 +408,7 @@ impl<'a> Drop for Options<'a> {
     }
 }
 
-pub async fn options(cx: &AnimationEngineContext, global_data: &mut game::GlobalData<'_>) {
+pub async fn options(cx: &AnimationEngineContext, global_data: &mut game::GlobalData) {
     info!("Enter Options");
     Options::new(cx).start(global_data).await;
 }

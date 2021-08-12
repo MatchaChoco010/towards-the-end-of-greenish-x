@@ -30,7 +30,7 @@ cp ./target/release/rpg.exe ./archive/game.exe
 dependencies = ["mkdir-archive", "build-executable"]
 script_runner = "@duckscript"
 script = '''
-cp ./target/release/i18n ./archive/
+cp ./rpg/i18n/ ./archive/
 '''
 
 [tasks.generate-assets]
@@ -82,3 +82,29 @@ alias = "generate-archive"
 
 [tasks.clean]
 alias = "clean-archive"
+
+[tasks.copy-resources-to-target-dir]
+script_runner = "@duckscript"
+script = '''
+rm -r ./target/release/resources/
+cp ./rpg/resources/ ./target/release
+'''
+
+[tasks.copy-i18n-directory-to-target-dir]
+dependencies = ["mkdir-archive", "build-executable"]
+script_runner = "@duckscript"
+script = '''
+rm -r ./target/release/i18n/
+cp ./rpg/i18n/ ./target/release/
+'''
+
+[tasks.run-release-binary]
+dependencies = [
+    "build-executable",
+    "copy-resources-to-target-dir",
+    "copy-i18n-directory"
+]
+command = "./target/release/rpg.exe"
+
+[tasks.run]
+alias = "run-release-binary"
