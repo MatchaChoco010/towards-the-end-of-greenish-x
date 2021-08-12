@@ -96,7 +96,7 @@ cp ./rpg/i18n/ ./target/release/
 dependencies = [
     "build-executable",
     "copy-resources-to-target-dir",
-    "copy-i18n-directory"
+    "copy-i18n-directory-to-target-dir"
 ]
 command = "./target/release/rpg.exe"
 
