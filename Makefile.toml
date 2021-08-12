@@ -85,7 +85,6 @@ cp ./rpg/resources/ ./target/release
 '''
 
 [tasks.copy-i18n-directory-to-target-dir]
-dependencies = ["mkdir-archive", "build-executable"]
 script_runner = "@duckscript"
 script = '''
 rm -r ./target/release/i18n/
