@@ -298,6 +298,29 @@ impl AnimationEngineContext {
         Ok(())
     }
 
+    pub fn set_image_name(&self, entity: Entity, name: impl ToString) -> anyhow::Result<()> {
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
+        let renderable = entry
+            .get_component_mut::<Renderable>()
+            .expect(&format!("Entity {:?} has no renderable component", entity));
+        let uuid = if name.to_string() == "".to_string() {
+            uuid::Uuid::nil()
+        } else {
+            self.get_mut()
+                .resources
+                .get::<ImageStore>()
+                .unwrap()
+                .get_image_uuid_from_name(name)
+                .expect("Failed to get image")
+        };
+        match renderable {
+            Renderable::Image { image, .. } => *image = uuid,
+            _ => panic!("Entity {:?} has no renderable::text component", entity),
+        }
+        Ok(())
+    }
+
     pub fn play_bgm(&self, name: impl ToString) {
         self.get_mut()
             .resources
