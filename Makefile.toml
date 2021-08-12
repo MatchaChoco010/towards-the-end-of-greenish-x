@@ -77,12 +77,6 @@ fn main() {
 }
 '''
 
-[tasks.default]
-alias = "generate-archive"
-
-[tasks.clean]
-alias = "clean-archive"
-
 [tasks.copy-resources-to-target-dir]
 script_runner = "@duckscript"
 script = '''
@@ -106,5 +100,11 @@ dependencies = [
 ]
 command = "./target/release/rpg.exe"
 
-[tasks.run]
+[tasks.archive]
+alias = "generate-archive"
+
+[tasks.clean]
+alias = "clean-archive"
+
+[tasks.default]
 alias = "run-release-binary"
