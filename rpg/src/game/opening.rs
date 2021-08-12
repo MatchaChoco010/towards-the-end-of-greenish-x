@@ -127,7 +127,6 @@ impl<'a> OpeningScene<'a> {
             ..Default::default()
         });
         let text_prologue = cx.add_text(AddTextInfo {
-            key: "opening-prologue-0-0".into(),
             font_size: 26.0,
             x: 120.0,
             y: 60.0,

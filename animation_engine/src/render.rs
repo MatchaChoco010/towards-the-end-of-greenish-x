@@ -49,7 +49,10 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
                 graphics::draw(ctx, mesh, draw_param)?
             }
             Renderable::Image { image: uuid } => {
-                let image = image_store.get_image(uuid).expect("Failed to get image");
+                if uuid == &uuid::Uuid::nil() {
+                    break;
+                }
+                let image = image_store.get_image(&uuid).expect("Failed to get image");
                 let color = graphics::Color::new(r, g, b, opacity);
                 let draw_param = graphics::DrawParam::new()
                     .dest(mint::Point2 { x: pos.x, y: pos.y })
@@ -59,6 +62,9 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
                 graphics::draw(ctx, image, draw_param)?;
             }
             Renderable::Text { key, font_size } => {
+                if key == "" {
+                    break;
+                }
                 let localize = resources
                     .get::<Box<dyn Localize>>()
                     .expect("Not set localize object!");

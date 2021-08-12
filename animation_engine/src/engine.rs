@@ -201,13 +201,16 @@ impl AnimationEngineContext {
             a,
             name,
         } = info;
-        let uuid = self
-            .get_mut()
-            .resources
-            .get::<ImageStore>()
-            .unwrap()
-            .get_image_uuid_from_name(name)
-            .expect("Failed to get image");
+        let uuid = if name == "".to_string() {
+            uuid::Uuid::nil()
+        } else {
+            self.get_mut()
+                .resources
+                .get::<ImageStore>()
+                .unwrap()
+                .get_image_uuid_from_name(name)
+                .expect("Failed to get image")
+        };
         self.get_mut().world.push((
             Position { x, y, z },
             UniformScale { scale },
