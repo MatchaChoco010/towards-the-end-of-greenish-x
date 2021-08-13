@@ -1,4 +1,5 @@
 // use animation_engine::executor::*;
+use animation_engine::executor::next_frame;
 use animation_engine::*;
 use async_recursion::async_recursion;
 use futures::{select, try_join, FutureExt};
@@ -26,10 +27,20 @@ struct OpeningScene<'a> {
     part_7: Entity,
     cursor_bg: Entity,
     cursor_top: Entity,
-    mini_cursor_bg: Entity,
-    mini_cursor_top: Entity,
     text_prologue: Entity,
     text_next: Entity,
+    middle_cover: Entity,
+    player_image: Entity,
+    player_shadow_image: Entity,
+    introduction_text: Entity,
+    legendary_name_text: Entity,
+    legendary_name: Entity,
+    legendary_name_shadow: Entity,
+    mini_cursor_bg: Entity,
+    mini_cursor_top: Entity,
+    confirm_message: Entity,
+    yes: Entity,
+    no: Entity,
 }
 impl<'a> OpeningScene<'a> {
     fn new(cx: &'a AnimationEngineContext) -> Self {
@@ -48,7 +59,7 @@ impl<'a> OpeningScene<'a> {
             g: 0.0,
             b: 0.0,
             a: 1.0,
-            z: 290,
+            z: 400,
             ..Default::default()
         });
         let part_0 = cx.add_image(AddImageInfo {
@@ -64,37 +75,47 @@ impl<'a> OpeningScene<'a> {
         });
         let part_2 = cx.add_image(AddImageInfo {
             name: "/image/ui/opening-part-2.png".into(),
-            z: 260,
+            x: 200.0,
+            y: 400.0,
+            z: 380,
             a: 0.0,
             ..Default::default()
         });
         let part_3 = cx.add_image(AddImageInfo {
             name: "/image/ui/opening-part-3.png".into(),
-            z: 255,
+            x: 1080.0,
+            y: 300.0,
+            z: 355,
             a: 0.0,
             ..Default::default()
         });
         let part_4 = cx.add_image(AddImageInfo {
             name: "/image/ui/opening-part-4.png".into(),
-            z: 250,
+            x: 1120.0,
+            y: 300.0,
+            z: 350,
             a: 0.0,
             ..Default::default()
         });
         let part_5 = cx.add_image(AddImageInfo {
             name: "/image/ui/opening-part-5.png".into(),
-            z: 255,
+            x: 50.0,
+            y: 300.0,
+            z: 355,
             a: 0.0,
             ..Default::default()
         });
         let part_6 = cx.add_image(AddImageInfo {
             name: "/image/ui/opening-part-6.png".into(),
-            z: 250,
+            x: 10.0,
+            y: 300.0,
+            z: 350,
             a: 0.0,
             ..Default::default()
         });
         let part_7 = cx.add_image(AddImageInfo {
             name: "/image/ui/opening-part-7.png".into(),
-            z: 220,
+            z: 310,
             a: 0.0,
             ..Default::default()
         });
@@ -110,18 +131,6 @@ impl<'a> OpeningScene<'a> {
             name: "/image/ui/cursor-top.png".into(),
             x: 100.0,
             y: 620.0,
-            z: 280,
-            a: 0.0,
-            ..Default::default()
-        });
-        let mini_cursor_bg = cx.add_image(AddImageInfo {
-            name: "/image/ui/mini-cursor-bg.png".into(),
-            z: 270,
-            a: 0.0,
-            ..Default::default()
-        });
-        let mini_cursor_top = cx.add_image(AddImageInfo {
-            name: "/image/ui/mini-cursor-top.png".into(),
             z: 280,
             a: 0.0,
             ..Default::default()
@@ -149,6 +158,115 @@ impl<'a> OpeningScene<'a> {
             a: 0.0,
             ..Default::default()
         });
+        let middle_cover = cx.add_rect(AddRectInfo {
+            width: 1280.0,
+            height: 720.0,
+            r: 0.3,
+            g: 0.3,
+            b: 0.3,
+            a: 0.0,
+            z: 300,
+            ..Default::default()
+        });
+        let player_image = cx.add_image(AddImageInfo {
+            y: 0.0,
+            z: 340,
+            a: 0.0,
+            ..Default::default()
+        });
+        let player_shadow_image = cx.add_image(AddImageInfo {
+            z: 335,
+            a: 0.0,
+            ..Default::default()
+        });
+        let introduction_text = cx.add_text(AddTextInfo {
+            font_size: 26.0,
+            y: 60.0,
+            z: 330,
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let legendary_name_text = cx.add_text(AddTextInfo {
+            key: "opening-legendary-name-text".into(),
+            font_size: 26.0,
+            y: 400.0,
+            z: 345,
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let legendary_name = cx.add_text(AddTextInfo {
+            font_size: 56.0,
+            y: 450.0,
+            z: 345,
+            r: 0.8,
+            g: 0.8,
+            b: 0.8,
+            a: 0.0,
+            ..Default::default()
+        });
+        let legendary_name_shadow = cx.add_text(AddTextInfo {
+            font_size: 56.0,
+            y: 453.0,
+            z: 344,
+            r: 0.2,
+            g: 0.2,
+            b: 0.2,
+            a: 0.0,
+            ..Default::default()
+        });
+        let mini_cursor_bg = cx.add_image(AddImageInfo {
+            name: "/image/ui/mini-cursor-bg.png".into(),
+            z: 385,
+            a: 0.0,
+            ..Default::default()
+        });
+        let mini_cursor_top = cx.add_image(AddImageInfo {
+            name: "/image/ui/mini-cursor-top.png".into(),
+            z: 395,
+            a: 0.0,
+            ..Default::default()
+        });
+        let confirm_message = cx.add_text(AddTextInfo {
+            font_size: 36.0,
+            x: 400.0,
+            y: 440.0,
+            z: 390,
+            r: 1.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let yes = cx.add_text(AddTextInfo {
+            key: "opening-yes".into(),
+            font_size: 36.0,
+            x: 440.0,
+            y: 595.0,
+            z: 390,
+            r: 1.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
+        let no = cx.add_text(AddTextInfo {
+            key: "opening-no".into(),
+            font_size: 36.0,
+            x: 680.0,
+            y: 595.0,
+            z: 390,
+            r: 1.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.0,
+            ..Default::default()
+        });
         Self {
             cx,
             bg,
@@ -163,10 +281,20 @@ impl<'a> OpeningScene<'a> {
             part_7,
             cursor_bg,
             cursor_top,
-            mini_cursor_bg,
-            mini_cursor_top,
             text_prologue,
             text_next,
+            middle_cover,
+            player_image,
+            player_shadow_image,
+            introduction_text,
+            legendary_name_text,
+            legendary_name,
+            legendary_name_shadow,
+            mini_cursor_bg,
+            mini_cursor_top,
+            confirm_message,
+            yes,
+            no,
         }
     }
 
@@ -242,17 +370,410 @@ impl<'a> OpeningScene<'a> {
         }
     }
 
-    async fn prologue_index(
-        &self,
-        index: Option<usize>,
-        opening_data: &OpeningData,
-        rng: &mut ThreadRng,
-    ) {
+    async fn prologue_index(&self, index: usize, opening_data: &OpeningData, rng: &mut ThreadRng) {
+        trace!("start opening prologue: {}", index);
+
         match opening_data {
-            OpeningData::Data { .. } => unreachable!(),
-            OpeningData::Sequence { .. } => self.prologue(opening_data, rng).await,
-            OpeningData::Random { data } => self.prologue(&data[index.unwrap()].1, rng).await,
+            OpeningData::Random { data } => self.prologue(&data[index].1, rng).await,
+            _ => unreachable!(),
         }
+
+        trace!("finish opening prologue: {}", index);
+    }
+
+    async fn enter_player_select_animation(&self) {
+        trace!("start opening enter player select animation");
+
+        try_join!(
+            self.cx.play_animation(
+                self.middle_cover,
+                "/animation/opening/middle-cover-enter.yml"
+            ),
+            self.cx
+                .play_animation(self.part_7, "/animation/opening/part-7-enter.yml"),
+        )
+        .expect("animation not found");
+        try_join!(
+            self.cx
+                .play_animation(self.part_3, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.part_4, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.part_5, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.part_6, "/animation/opening/content-enter.yml"),
+        )
+        .expect("animation not found");
+
+        trace!("finish opening enter player select animation");
+    }
+
+    async fn close_player_select_animation(&self) {
+        trace!("start opening close player select animation");
+
+        try_join!(
+            self.cx.play_animation(
+                self.middle_cover,
+                "/animation/opening/middle-cover-close.yml"
+            ),
+            self.cx
+                .play_animation(self.part_7, "/animation/opening/part-7-close.yml"),
+            self.cx
+                .play_animation(self.part_3, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.part_4, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.part_5, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.part_6, "/animation/opening/content-close.yml"),
+            self.cx.play_animation(
+                self.introduction_text,
+                "/animation/opening/content-close.yml"
+            ),
+            self.cx
+                .play_animation(self.legendary_name, "/animation/opening/content-close.yml"),
+            self.cx.play_animation(
+                self.legendary_name_shadow,
+                "/animation/opening/content-close.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name_text,
+                "/animation/opening/content-close.yml"
+            ),
+            self.cx
+                .play_animation(self.part_2, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.confirm_message, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.yes, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.no, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.mini_cursor_bg, "/animation/opening/content-close.yml"),
+            self.cx
+                .play_animation(self.mini_cursor_top, "/animation/opening/content-close.yml"),
+        )
+        .expect("animation not found");
+
+        trace!("finish opening close player select animation");
+    }
+
+    async fn player_fade_in(&self, player_data: &PlayerData) {
+        self.cx
+            .set_image_name(self.player_image, &player_data.image)
+            .expect("Player image not found");
+        self.cx
+            .set_image_name(self.player_shadow_image, &player_data.shadow_image)
+            .expect("Player image not found");
+        self.cx
+            .set_text_key(self.legendary_name, &player_data.opening_legendary_name)
+            .expect(&format!(
+                "Failed to get text: {}",
+                &player_data.opening_legendary_name
+            ));
+        self.cx
+            .set_text_key(
+                self.legendary_name_shadow,
+                &player_data.opening_legendary_name,
+            )
+            .expect(&format!(
+                "Failed to get text: {}",
+                &player_data.opening_legendary_name
+            ));
+        self.cx
+            .set_text_key(
+                self.introduction_text,
+                &player_data.opening_introduction_text,
+            )
+            .expect(&format!(
+                "Failed to get text: {}",
+                &player_data.opening_introduction_text
+            ));
+
+        try_join!(
+            self.cx.play_animation(
+                self.player_image,
+                "/animation/opening/player-image-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.player_shadow_image,
+                "/animation/opening/player-shadow-image-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.introduction_text,
+                "/animation/opening/introduction-text-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name,
+                "/animation/opening/legendary-name-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name_shadow,
+                "/animation/opening/legendary-name-shadow-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name_text,
+                "/animation/opening/legendary-name-text-fade-in.yml"
+            ),
+        )
+        .expect("animation not found");
+    }
+
+    async fn player_fade_out(&self) {
+        try_join!(
+            self.cx.play_animation(
+                self.player_image,
+                "/animation/opening/player-image-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.player_shadow_image,
+                "/animation/opening/player-shadow-image-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.introduction_text,
+                "/animation/opening/introduction-text-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name,
+                "/animation/opening/legendary-name-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name_shadow,
+                "/animation/opening/legendary-name-shadow-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.legendary_name_text,
+                "/animation/opening/legendary-name-text-fade-out.yml"
+            ),
+        )
+        .expect("animation not found");
+    }
+
+    async fn confirm_player_select(&self, player_index: usize) -> bool {
+        self.cx
+            .set_text_key(
+                self.confirm_message,
+                format!("opening-player-{}-confirm", player_index),
+            )
+            .expect(&format!(
+                "Failed to get text: {}",
+                format!("opening-player-{}-confirm", player_index)
+            ));
+        self.cx
+            .set_position(self.mini_cursor_bg, 620.0, 580.0, 385)
+            .unwrap();
+        self.cx
+            .set_position(self.mini_cursor_top, 620.0, 580.0, 395)
+            .unwrap();
+
+        try_join!(
+            self.cx
+                .play_animation(self.part_2, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.mini_cursor_bg, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.mini_cursor_top, "/animation/opening/content-enter.yml"),
+        )
+        .expect("animation not found");
+        try_join!(
+            self.cx
+                .play_animation(self.confirm_message, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.yes, "/animation/opening/content-enter.yml"),
+            self.cx
+                .play_animation(self.no, "/animation/opening/content-enter.yml"),
+        )
+        .expect("animation not found");
+
+        let mut confirm = false;
+        loop {
+            select! {
+                _ = input::wait_left(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    confirm = !confirm;
+                    let pos_x = if confirm { 380.0 } else { 620.0 };
+                    self.cx
+                        .set_position(self.mini_cursor_bg, pos_x, 580.0, 385)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.mini_cursor_top, pos_x, 580.0, 395)
+                        .unwrap();
+                    next_frame().await;
+                }
+                _ = input::wait_right(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    confirm = !confirm;
+                    let pos_x = if confirm { 380.0 } else { 620.0 };
+                    self.cx
+                        .set_position(self.mini_cursor_bg, pos_x, 580.0, 385)
+                        .unwrap();
+                    self.cx
+                        .set_position(self.mini_cursor_top, pos_x, 580.0, 395)
+                        .unwrap();
+                    next_frame().await;
+                }
+                _ = input::wait_select_button(self.cx).fuse() => {
+                    if confirm {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        return true;
+                    } else {
+                        self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                        try_join!(
+                            self.cx
+                                .play_animation(self.part_2, "/animation/opening/content-close.yml"),
+                            self.cx
+                                .play_animation(self.mini_cursor_bg, "/animation/opening/content-close.yml"),
+                            self.cx
+                                .play_animation(self.mini_cursor_top, "/animation/opening/content-close.yml"),
+                            self.cx
+                                .play_animation(self.confirm_message, "/animation/opening/content-close.yml"),
+                            self.cx
+                                .play_animation(self.yes, "/animation/opening/content-close.yml"),
+                            self.cx
+                                .play_animation(self.no, "/animation/opening/content-close.yml"),
+                        )
+                        .expect("animation not found");
+                        return false;
+                    }
+                }
+                _ = input::wait_cancel_button(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                    try_join!(
+                        self.cx
+                            .play_animation(self.part_2, "/animation/opening/content-close.yml"),
+                        self.cx
+                            .play_animation(self.mini_cursor_bg, "/animation/opening/content-close.yml"),
+                        self.cx
+                            .play_animation(self.mini_cursor_top, "/animation/opening/content-close.yml"),
+                        self.cx
+                            .play_animation(self.confirm_message, "/animation/opening/content-close.yml"),
+                        self.cx
+                            .play_animation(self.yes, "/animation/opening/content-close.yml"),
+                        self.cx
+                            .play_animation(self.no, "/animation/opening/content-close.yml"),
+                    )
+                    .expect("animation not found");
+                    return false;
+                }
+            }
+        }
+    }
+
+    async fn player_select(&self, player_data: &Vec<PlayerData>) -> PlayerIndex {
+        self.enter_player_select_animation().await;
+
+        let len = player_data.len();
+        let mut player_index = 0;
+        self.player_fade_in(&player_data[player_index]).await;
+        loop {
+            select! {
+                _ = input::wait_left(self.cx).fuse() => {
+                    player_index = (player_index - 1 + len) % len;
+                    self.cx.play_sfx("/audio/sfx/menu.ogg");
+                    self.player_fade_out().await;
+                    self.player_fade_in(&player_data[player_index]).await;
+                }
+                _ = input::wait_right(self.cx).fuse() => {
+                    player_index = (player_index + 1 + len) % len;
+                    self.cx.play_sfx("/audio/sfx/menu.ogg");
+                    self.player_fade_out().await;
+                    self.player_fade_in(&player_data[player_index]).await;
+                }
+                _ = input::wait_select_button(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                    if self.confirm_player_select(player_index).await {
+                        break;
+                    }
+                    next_frame().await;
+                }
+            }
+        }
+
+        self.close_player_select_animation().await;
+        PlayerIndex(player_index)
+    }
+
+    async fn enter_player_prologue_animation(&self) {
+        trace!("start opening enter player prologue animation");
+
+        try_join!(
+            self.cx
+                .play_animation(self.part_0, "/animation/opening/part-0-enter.yml"),
+            self.cx.play_animation(
+                self.player_image,
+                "/animation/opening/player-image-enter-prologue.yml"
+            ),
+            self.cx.play_animation(
+                self.player_shadow_image,
+                "/animation/opening/player-shadow-image-enter-prologue.yml"
+            ),
+        )
+        .expect("animation not found");
+
+        trace!("finish opening enter player prologue animation");
+    }
+
+    async fn player_prologue(&self, index: usize, player_data: &PlayerData) {
+        self.enter_player_prologue_animation().await;
+
+        let messages = &player_data
+            .prologue
+            .iter()
+            .find(|i| i.index == index)
+            .unwrap()
+            .messages;
+        for PrologueMessage(text) in messages {
+            self.cx
+                .set_text_key(self.text_prologue, text)
+                .expect(&format!("Failed to get text: {}", text));
+
+            self.cx
+                .play_animation(
+                    self.text_prologue,
+                    "/animation/opening/text-prologue-fade-in.yml",
+                )
+                .await
+                .expect("animation not found");
+
+            self.cx.play_sfx("/audio/sfx/cursor.ogg");
+            try_join!(
+                self.cx
+                    .play_animation(self.text_next, "/animation/opening/next-fade-in.yml"),
+                self.cx
+                    .play_animation(self.cursor_bg, "/animation/opening/next-fade-in.yml"),
+                self.cx
+                    .play_animation(self.cursor_top, "/animation/opening/next-fade-in.yml")
+            )
+            .expect("animation not found");
+
+            input::wait_select_button(self.cx).await;
+
+            self.cx.play_sfx("/audio/sfx/select.ogg");
+            try_join!(
+                self.cx.play_animation(
+                    self.text_prologue,
+                    "/animation/opening/text-prologue-fade-out.yml",
+                ),
+                self.cx
+                    .play_animation(self.text_next, "/animation/opening/next-fade-out.yml"),
+                self.cx
+                    .play_animation(self.cursor_bg, "/animation/opening/next-fade-out.yml"),
+                self.cx
+                    .play_animation(self.cursor_top, "/animation/opening/next-fade-out.yml")
+            )
+            .expect("animation not found");
+        }
+    }
+
+    async fn close_animation(&self) {
+        trace!("start opening close animation");
+
+        self.cx
+            .play_animation(self.cover, "/animation/opening/cover-close.yml")
+            .await
+            .expect("animation not founr");
+
+        trace!("finish opening close animation");
     }
 
     async fn start(&self, global_data: &mut game::GlobalData) -> PlayerIndex {
@@ -260,22 +781,21 @@ impl<'a> OpeningScene<'a> {
         self.enter_animation().await;
 
         let game_data = global_data.game_data();
-
         let index = match game_data.opening_data() {
-            OpeningData::Data { .. } => unreachable!(),
-            OpeningData::Sequence { .. } => None,
             OpeningData::Random { data } => {
                 let dist = WeightedIndex::new(data.iter().map(|(w, _)| w)).unwrap();
-                let index = dist.sample(&mut *global_data.rng());
-                Some(index)
+                dist.sample(&mut *global_data.rng())
             }
+            _ => unreachable!(),
         };
-
         self.prologue_index(index, game_data.opening_data(), &mut global_data.rng())
             .await;
+        let player_index = self.player_select(game_data.player_data()).await;
+        self.player_prologue(index, &game_data.player_data()[player_index.0])
+            .await;
 
-        input::wait_select_button(self.cx).await;
-        PlayerIndex(0)
+        self.close_animation().await;
+        player_index
     }
 }
 impl<'a> Drop for OpeningScene<'a> {
@@ -294,10 +814,20 @@ impl<'a> Drop for OpeningScene<'a> {
         self.cx.delete_entity(self.part_7);
         self.cx.delete_entity(self.cursor_bg);
         self.cx.delete_entity(self.cursor_top);
-        self.cx.delete_entity(self.mini_cursor_bg);
-        self.cx.delete_entity(self.mini_cursor_top);
         self.cx.delete_entity(self.text_prologue);
         self.cx.delete_entity(self.text_next);
+        self.cx.delete_entity(self.middle_cover);
+        self.cx.delete_entity(self.player_image);
+        self.cx.delete_entity(self.player_shadow_image);
+        self.cx.delete_entity(self.introduction_text);
+        self.cx.delete_entity(self.legendary_name_text);
+        self.cx.delete_entity(self.legendary_name);
+        self.cx.delete_entity(self.legendary_name_shadow);
+        self.cx.delete_entity(self.mini_cursor_bg);
+        self.cx.delete_entity(self.mini_cursor_top);
+        self.cx.delete_entity(self.confirm_message);
+        self.cx.delete_entity(self.yes);
+        self.cx.delete_entity(self.no);
     }
 }
 

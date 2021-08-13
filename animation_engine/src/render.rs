@@ -50,7 +50,7 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
             }
             Renderable::Image { image: uuid } => {
                 if uuid == &uuid::Uuid::nil() {
-                    break;
+                    continue;
                 }
                 let image = image_store.get_image(&uuid).expect("Failed to get image");
                 let color = graphics::Color::new(r, g, b, opacity);
@@ -63,7 +63,7 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
             }
             Renderable::Text { key, font_size } => {
                 if key == "" {
-                    break;
+                    continue;
                 }
                 let localize = resources
                     .get::<Box<dyn Localize>>()

@@ -65,6 +65,14 @@ fn load_image(engine: &mut AnimationEngine) -> anyhow::Result<()> {
         engine.load_image(&name, &path)?;
     }
 
+    for path in engine.filesystem().read_dir("/image/player/")? {
+        let name = path.to_string_lossy();
+
+        trace!("[load image] name: {}, path: {:?}", name, path);
+
+        engine.load_image(&name, &path)?;
+    }
+
     info!("Finish loading images!");
 
     Ok(())

@@ -299,11 +299,6 @@ impl AnimationEngineContext {
     }
 
     pub fn set_image_name(&self, entity: Entity, name: impl ToString) -> anyhow::Result<()> {
-        let mut this = self.get_mut();
-        let mut entry = this.world.entry_mut(entity)?;
-        let renderable = entry
-            .get_component_mut::<Renderable>()
-            .expect(&format!("Entity {:?} has no renderable component", entity));
         let uuid = if name.to_string() == "".to_string() {
             uuid::Uuid::nil()
         } else {
@@ -314,6 +309,11 @@ impl AnimationEngineContext {
                 .get_image_uuid_from_name(name)
                 .expect("Failed to get image")
         };
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
+        let renderable = entry
+            .get_component_mut::<Renderable>()
+            .expect(&format!("Entity {:?} has no renderable component", entity));
         match renderable {
             Renderable::Image { image, .. } => *image = uuid,
             _ => panic!("Entity {:?} has no renderable::text component", entity),
@@ -335,6 +335,14 @@ impl AnimationEngineContext {
             .get_mut::<AudioStore>()
             .unwrap()
             .set_bgm(name, AudioPlayOption::Resume);
+    }
+
+    pub fn stop_bgm(&self) {
+        self.get_mut()
+            .resources
+            .get_mut::<AudioStore>()
+            .unwrap()
+            .set_bgm("", AudioPlayOption::Play);
     }
 
     pub fn get_bgm_volume(&self) -> f32 {

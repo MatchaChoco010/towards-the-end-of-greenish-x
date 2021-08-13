@@ -76,6 +76,7 @@ async fn main(cx: AnimationEngineContext, mut global_data: GlobalData) {
         }
         let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
         info!("PlayerIndex: {}", index);
+        crate::input::wait_select_button(&cx).await;
         next_frame().await;
     }
 }

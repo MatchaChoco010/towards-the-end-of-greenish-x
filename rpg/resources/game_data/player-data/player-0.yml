@@ -1,0 +1,14 @@
+index: 0
+image: /image/player/player-0.png
+shadow_image: /image/player/player-0-shadow.png
+opening_legendary_name: opening-player-0-legendary-name
+opening_introduction_text: opening-player-0-introduction-text
+prologue:
+  - index: 0
+    messages:
+      - opening-player-0-prologue-0-0
+      - opening-player-0-prologue-0-1
+  - index: 1
+    messages:
+      - opening-player-0-prologue-1-0
+      - opening-player-0-prologue-1-1

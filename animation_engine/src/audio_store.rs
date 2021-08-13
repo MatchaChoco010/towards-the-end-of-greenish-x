@@ -92,40 +92,46 @@ impl AudioStore {
         // bgm
         if let Some((bgm_name, option)) = self.next_bgm.take() {
             if let Some(current_bgm_name) = self.current_bgm.take() {
-                let source = self
-                    .bgm_hashmap
-                    .get(&current_bgm_name)
-                    .expect(&format!("No such audio: {}", current_bgm_name));
-                source.pause();
+                if current_bgm_name != "" {
+                    let source = self
+                        .bgm_hashmap
+                        .get(&current_bgm_name)
+                        .expect(&format!("No such audio: {}", current_bgm_name));
+                    source.pause();
+                }
             }
 
-            let source = self
-                .bgm_hashmap
-                .get_mut(&bgm_name)
-                .expect(&format!("No such audio: {}", bgm_name));
-            if source.paused() {
-                match option {
-                    AudioPlayOption::Play => {
-                        source.stop(ctx)?;
-                        source.play(ctx)?;
+            if bgm_name != "" {
+                let source = self
+                    .bgm_hashmap
+                    .get_mut(&bgm_name)
+                    .expect(&format!("No such audio: {}", bgm_name));
+                if source.paused() {
+                    match option {
+                        AudioPlayOption::Play => {
+                            source.stop(ctx)?;
+                            source.play(ctx)?;
+                        }
+                        AudioPlayOption::Resume => {
+                            source.resume();
+                        }
                     }
-                    AudioPlayOption::Resume => {
-                        source.resume();
-                    }
+                } else {
+                    source.play(ctx)?;
                 }
-            } else {
-                source.play(ctx)?;
             }
 
             self.current_bgm = Some(bgm_name);
         }
         // update bgm volume
         if let Some(current_bgm_name) = self.current_bgm.as_ref() {
-            let source = self
-                .bgm_hashmap
-                .get_mut(current_bgm_name)
-                .expect(&format!("No such audio: {}", current_bgm_name));
-            source.set_volume(self.bgm_volume);
+            if current_bgm_name != "" {
+                let source = self
+                    .bgm_hashmap
+                    .get_mut(current_bgm_name)
+                    .expect(&format!("No such audio: {}", current_bgm_name));
+                source.set_volume(self.bgm_volume);
+            }
         }
 
         Ok(())
