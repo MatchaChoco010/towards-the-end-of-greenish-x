@@ -62,32 +62,32 @@ pub async fn wait_right_trigger(cx: &AnimationEngineContext) {
 
 pub async fn wait_left(cx: &AnimationEngineContext) {
     select! {
-        _ = cx.wait_key_down(KeyCode::Left).fuse() => (),
-        _ = cx.wait_button_down(Button::DPadLeft).fuse() => (),
+        _ = cx.wait_key_pressed(KeyCode::Left).fuse() => (),
+        _ = cx.wait_button_pressed(Button::DPadLeft).fuse() => (),
         _ = wait_less_axis_value(cx, Axis::LeftStickX, -0.7).fuse() => (),
     }
 }
 
 pub async fn wait_right(cx: &AnimationEngineContext) {
     select! {
-        _ = cx.wait_key_down(KeyCode::Right).fuse() => (),
-        _ = cx.wait_button_down(Button::DPadRight).fuse() => (),
+        _ = cx.wait_key_pressed(KeyCode::Right).fuse() => (),
+        _ = cx.wait_button_pressed(Button::DPadRight).fuse() => (),
         _ = wait_greater_axis_value(cx, Axis::LeftStickX, 0.7).fuse() => (),
     }
 }
 
 pub async fn wait_up(cx: &AnimationEngineContext) {
     select! {
-        _ = cx.wait_key_down(KeyCode::Up).fuse() => (),
-        _ = cx.wait_button_down(Button::DPadUp).fuse() => (),
+        _ = cx.wait_key_pressed(KeyCode::Up).fuse() => (),
+        _ = cx.wait_button_pressed(Button::DPadUp).fuse() => (),
         _ = wait_greater_axis_value(cx, Axis::LeftStickY, 0.7).fuse() => (),
     }
 }
 
 pub async fn wait_down(cx: &AnimationEngineContext) {
     select! {
-        _ = cx.wait_key_down(KeyCode::Down).fuse() => (),
-        _ = cx.wait_button_down(Button::DPadDown).fuse() => (),
+        _ = cx.wait_key_pressed(KeyCode::Down).fuse() => (),
+        _ = cx.wait_button_pressed(Button::DPadDown).fuse() => (),
         _ = wait_less_axis_value(cx, Axis::LeftStickY, -0.7).fuse() => (),
     }
 }

@@ -2,6 +2,7 @@ use animation_engine::executor::*;
 use animation_engine::*;
 use futures::{select, try_join, FutureExt};
 use log::{info, trace};
+use std::time::Duration;
 
 use crate::game::game;
 use crate::input;
@@ -297,10 +298,12 @@ impl<'a> Options<'a> {
                 _ = input::wait_up(self.cx).fuse() => {
                     index = (index - 1 + 4) % 4;
                     self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_down(self.cx).fuse() => {
                     index = (index + 1 + 4) % 4;
                     self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_left(self.cx).fuse() => {
                     match index {
@@ -337,6 +340,7 @@ impl<'a> Options<'a> {
                         3 => (),
                         _ => unreachable!(),
                     }
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_right(self.cx).fuse() => {
                     match index {
@@ -373,6 +377,7 @@ impl<'a> Options<'a> {
                         3 => (),
                         _ => unreachable!(),
                     }
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_select_button(self.cx).fuse() => {
                     if index == 3 {

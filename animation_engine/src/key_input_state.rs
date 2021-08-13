@@ -25,6 +25,9 @@ impl KeyInputState {
     }
 
     pub(crate) fn set_down(&mut self, key: KeyCode) {
+        if *self.pressed_hashmap.get(&key).unwrap_or(&false) {
+            return;
+        }
         self.down_hashmap.insert(key, true);
         self.pressed_hashmap.insert(key, true);
     }

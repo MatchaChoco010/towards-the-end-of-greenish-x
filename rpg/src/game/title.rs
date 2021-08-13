@@ -2,6 +2,7 @@ use animation_engine::executor::*;
 use animation_engine::*;
 use futures::{select, try_join, FutureExt};
 use log::{info, trace};
+use std::time::Duration;
 
 use crate::game::game;
 use crate::game::options;
@@ -344,10 +345,12 @@ impl<'a> TitleScene<'a> {
                 _ = input::wait_up(self.cx).fuse() => {
                     index = (index - 1 + 5) % 5;
                     self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_down(self.cx).fuse() => {
                     index = (index + 1 + 5) % 5;
                     self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_select_button(self.cx).fuse() => {
                     match index {

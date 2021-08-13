@@ -1,11 +1,12 @@
-// use animation_engine::executor::*;
 use animation_engine::executor::next_frame;
+use animation_engine::executor::*;
 use animation_engine::*;
 use async_recursion::async_recursion;
 use futures::{select, try_join, FutureExt};
 use log::{info, trace};
 use rand::distributions::*;
 use rand::prelude::*;
+use std::time::Duration;
 
 use crate::game::game;
 use crate::game_data::*;
@@ -599,6 +600,7 @@ impl<'a> OpeningScene<'a> {
                         .set_position(self.mini_cursor_top, pos_x, 580.0, 395)
                         .unwrap();
                     next_frame().await;
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_right(self.cx).fuse() => {
                     self.cx.play_sfx("/audio/sfx/cursor.ogg");
@@ -611,6 +613,7 @@ impl<'a> OpeningScene<'a> {
                         .set_position(self.mini_cursor_top, pos_x, 580.0, 395)
                         .unwrap();
                     next_frame().await;
+                    delay(Duration::from_millis(150)).await;
                 }
                 _ = input::wait_select_button(self.cx).fuse() => {
                     if confirm {
