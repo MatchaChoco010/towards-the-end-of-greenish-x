@@ -113,6 +113,14 @@ fn load_animation(engine: &mut AnimationEngine) -> anyhow::Result<()> {
         engine.load_animation_yaml(&name, &path)?;
     }
 
+    for path in engine.filesystem().read_dir("/animation/explore/")? {
+        let name = path.to_string_lossy();
+
+        trace!("[load animation] name: {}, path: {:?}", name, path);
+
+        engine.load_animation_yaml(&name, &path)?;
+    }
+
     info!("Finish loading animations!");
 
     Ok(())

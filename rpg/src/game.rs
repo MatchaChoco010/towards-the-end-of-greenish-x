@@ -1,3 +1,4 @@
+mod explore;
 mod game;
 mod opening;
 mod options;

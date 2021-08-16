@@ -1,0 +1,13 @@
+len: 60
+fps: 60
+data:
+  - - Opacity_opacity
+    - keys:
+        - frame: 1
+          value: 1.0
+  - - Position_y
+    - keys:
+        - frame: 30
+          value: 720.0
+        - frame: 60
+          value: 0.0

@@ -6,8 +6,7 @@ use rand::prelude::*;
 use std::cell::{RefCell, RefMut};
 use std::pin::Pin;
 
-use crate::game::opening;
-use crate::game::title;
+use crate::game::*;
 use crate::game_data;
 use crate::save_data;
 
@@ -74,8 +73,9 @@ async fn main(cx: AnimationEngineContext, mut global_data: GlobalData) {
         if let title::TitleResult::Exit = title::title(&cx, &mut global_data).await {
             break;
         }
-        let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
-        info!("PlayerIndex: {}", index);
+        // let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
+        let index = 0;
+        explore::explore(&cx, &mut global_data, index).await;
         crate::input::wait_select_button(&cx).await;
         next_frame().await;
     }
@@ -83,12 +83,12 @@ async fn main(cx: AnimationEngineContext, mut global_data: GlobalData) {
 
 pub fn game(
     global_data: GlobalData,
-) -> Box<dyn FnOnce(AnimationEngineContext) -> Pin<Box<dyn Future<Output = ()> + 'static>>> {
+) -> impl FnOnce(AnimationEngineContext) -> Pin<Box<dyn Future<Output = ()> + 'static>> {
     info!("Start game!");
-    Box::new(move |cx: AnimationEngineContext| {
+    move |cx: AnimationEngineContext| {
         Box::pin(async move {
             main(cx, global_data).await;
             info!("Exit game!");
         })
-    })
+    }
 }

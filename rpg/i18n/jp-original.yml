@@ -229,3 +229,23 @@ texts:
   opening-player-1-confirm: |-
     「連撃のハルバーディア」で
     探索を始めますか？
+  message1: |-
+    メッセージ 1
+    メッセージ 1
+  message2: メッセージ 2
+  message3: メッセージ 3
+  message4: メッセージ 4
+  message5: メッセージ 5
+  message6: メッセージ 6
+  message-choice: メッセージ
+  choice1: |-
+    選択肢 1
+    選択肢 1
+  choice2: 選択肢 2
+  choice3: |-
+    選択肢 3
+    選択肢 3
+    選択肢 3
+  choice4: 選択肢 4
+  explore-depth: 深度
+  explore-current-depth: ' 12/150'
