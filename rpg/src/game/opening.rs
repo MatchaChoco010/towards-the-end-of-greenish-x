@@ -385,15 +385,17 @@ impl<'a> OpeningScene<'a> {
     async fn enter_player_select_animation(&self) {
         trace!("start opening enter player select animation");
 
-        try_join!(
-            self.cx.play_animation(
+        self.cx
+            .play_animation(
                 self.middle_cover,
-                "/animation/opening/middle-cover-enter.yml"
-            ),
-            self.cx
-                .play_animation(self.part_7, "/animation/opening/part-7-enter.yml"),
-        )
-        .expect("animation not found");
+                "/animation/opening/middle-cover-enter.yml",
+            )
+            .await
+            .expect("animation not found");
+        self.cx
+            .play_animation(self.part_7, "/animation/opening/part-7-enter.yml")
+            .await
+            .expect("animation not found");
         try_join!(
             self.cx
                 .play_animation(self.part_3, "/animation/opening/content-enter.yml"),

@@ -73,8 +73,8 @@ async fn main(cx: AnimationEngineContext, mut global_data: GlobalData) {
         if let title::TitleResult::Exit = title::title(&cx, &mut global_data).await {
             break;
         }
-        // let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
-        let index = 0;
+        let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
+        // let index = 0;
         explore::explore(&cx, &mut global_data, index).await;
         crate::input::wait_select_button(&cx).await;
         next_frame().await;

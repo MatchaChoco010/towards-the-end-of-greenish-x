@@ -61,7 +61,11 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
                     .color(color);
                 graphics::draw(ctx, image, draw_param)?;
             }
-            Renderable::Text { key, font_size } => {
+            Renderable::Text {
+                key,
+                font_size,
+                format_args,
+            } => {
                 if key == "" {
                     continue;
                 }
@@ -69,7 +73,11 @@ pub(crate) fn render(ctx: &mut Context, world: &World, resources: &Resources) ->
                     .get::<Box<dyn Localize>>()
                     .expect("Not set localize object!");
                 let LocalizeText { font_name, text } = localize.get(key);
-                let mut text = graphics::Text::new(text.to_string());
+                let mut text = text.to_string();
+                for arg in format_args {
+                    text = text.replacen("{}", arg, 1);
+                }
+                let mut text = graphics::Text::new(text);
                 let font = font_store.get_font(font_name)?;
                 text.set_font(font.to_owned(), graphics::PxScale::from(*font_size));
                 let color = graphics::Color::new(r, g, b, opacity);

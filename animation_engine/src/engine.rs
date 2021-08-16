@@ -93,6 +93,7 @@ pub struct AddTextInfo {
     pub a: f32,
     pub key: String,
     pub font_size: f32,
+    pub format_args: Vec<String>,
 }
 impl Default for AddTextInfo {
     fn default() -> Self {
@@ -108,6 +109,7 @@ impl Default for AddTextInfo {
             a: 1.0,
             key: "".to_string(),
             font_size: 24.0,
+            format_args: vec![],
         }
     }
 }
@@ -234,6 +236,7 @@ impl AnimationEngineContext {
             a,
             key,
             font_size,
+            format_args,
         } = info;
         self.get_mut().world.push((
             Position { x, y, z },
@@ -241,7 +244,11 @@ impl AnimationEngineContext {
             Rotation { rotation },
             Color { r, g, b },
             Opacity { opacity: a },
-            Renderable::Text { key, font_size },
+            Renderable::Text {
+                key,
+                font_size,
+                format_args,
+            },
         ))
     }
 
@@ -293,6 +300,21 @@ impl AnimationEngineContext {
             .expect(&format!("Entity {:?} has no renderable component", entity));
         match renderable {
             Renderable::Text { key, .. } => *key = new_key.to_string(),
+            _ => panic!("Entity {:?} has no renderable::text component", entity),
+        }
+        Ok(())
+    }
+
+    pub fn set_text_format_args(&self, entity: Entity, new_args: &[&str]) -> anyhow::Result<()> {
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
+        let renderable = entry
+            .get_component_mut::<Renderable>()
+            .expect(&format!("Entity {:?} has no renderable component", entity));
+        match renderable {
+            Renderable::Text { format_args, .. } => {
+                *format_args = new_args.into_iter().map(|s| s.to_string()).collect()
+            }
             _ => panic!("Entity {:?} has no renderable::text component", entity),
         }
         Ok(())

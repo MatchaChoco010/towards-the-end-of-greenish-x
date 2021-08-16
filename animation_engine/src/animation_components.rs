@@ -57,6 +57,7 @@ anim_components! {
         Text {
             key: String,
             font_size: f32,
+            format_args: Vec<String>,
         },
         Image {
             image: Uuid,

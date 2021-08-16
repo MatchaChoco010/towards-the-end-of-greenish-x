@@ -485,9 +485,11 @@ struct CurrentDepth<'a> {
     cx: &'a AnimationEngineContext,
     text: Entity,
     count_text: Entity,
+    depth: u32,
+    max_depth: u32,
 }
 impl<'a> CurrentDepth<'a> {
-    fn new(cx: &'a AnimationEngineContext) -> Self {
+    fn new(cx: &'a AnimationEngineContext, max_depth: u32) -> Self {
         let text = cx.add_text(AddTextInfo {
             key: "explore-depth".into(),
             font_size: 48.0,
@@ -499,6 +501,7 @@ impl<'a> CurrentDepth<'a> {
         let count_text = cx.add_text(AddTextInfo {
             key: "explore-current-depth".into(),
             font_size: 36.0,
+            format_args: vec!["  1".into(), format!("{}", max_depth)],
             x: 70.0,
             y: 90.0,
             z: 20,
@@ -508,10 +511,20 @@ impl<'a> CurrentDepth<'a> {
             cx,
             text,
             count_text,
+            depth: 1,
+            max_depth,
         }
     }
 
-    fn increment(&self) {}
+    fn increment(&mut self) {
+        self.depth += 1;
+        self.cx
+            .set_text_format_args(
+                self.count_text,
+                &[&format!("{:3}", self.depth), &format!("{}", self.max_depth)],
+            )
+            .unwrap();
+    }
 }
 impl<'a> Drop for CurrentDepth<'a> {
     fn drop(&mut self) {
@@ -739,10 +752,10 @@ pub struct ExploreScene<'a> {
     message_list: MessageList<'a>,
 }
 impl<'a> ExploreScene<'a> {
-    fn new(cx: &'a AnimationEngineContext, player_index: usize) -> Self {
+    fn new(cx: &'a AnimationEngineContext, player_index: usize, max_depth: u32) -> Self {
         let frame = WindowFrame::new(cx);
         let cover = Cover::new(cx);
-        let current_depth = CurrentDepth::new(cx);
+        let current_depth = CurrentDepth::new(cx, max_depth);
         let background = Background::new(cx);
         let message_list = MessageList::new(cx);
         Self {
@@ -810,11 +823,14 @@ impl<'a> ExploreScene<'a> {
             self.current_depth.increment();
         }
 
+        self.cx.play_bgm("battle-0");
         self.cover.start_battle().await;
         input::wait_select_button(self.cx).await;
+        self.cx.stop_bgm();
         self.cover.fade_in().await;
 
         self.background.change_to_night().await;
+        self.cx.play_bgm("field-1");
         let messages = [
             "message1", "message2", "message3", "message4", "message5", "message6",
         ];
@@ -835,7 +851,7 @@ pub async fn explore(
     player_index: usize,
 ) {
     info!("Enter Explore Scene!");
-    ExploreScene::new(cx, player_index)
+    ExploreScene::new(cx, player_index, 150)
         .start(global_data)
         .await
         .expect("Failed to play explore scene.")
