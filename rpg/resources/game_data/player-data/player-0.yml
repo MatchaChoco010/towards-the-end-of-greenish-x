@@ -12,3 +12,28 @@ prologue:
     messages:
       - opening-player-0-prologue-1-0
       - opening-player-0-prologue-1-1
+skills:
+  - id: 0
+    skill_type: 0
+    reality: 0
+    skill_name: player-0-skill-name-0
+    skill_name_with_level: player-0-skill-name-0-level-1
+    skill_description: player-0-skill-description-0-level-1
+  - id: 1
+    skill_type: 1
+    reality: 0
+    skill_name: player-0-skill-name-1
+    skill_name_with_level: player-0-skill-name-1-level-1
+    skill_description: player-0-skill-description-1-level-1
+  - id: 2
+    skill_type: 2
+    reality: 0
+    skill_name: player-0-skill-name-2
+    skill_name_with_level: player-0-skill-name-2-level-1
+    skill_description: player-0-skill-description-2-level-1
+  - id: 3
+    skill_type: 0
+    reality: 1
+    skill_name: player-0-skill-name-0
+    skill_name_with_level: player-0-skill-name-0-level-2
+    skill_description: player-0-skill-description-0-level-2

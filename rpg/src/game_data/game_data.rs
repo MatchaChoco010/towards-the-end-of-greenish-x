@@ -6,6 +6,7 @@ use crate::game_data::*;
 pub struct GameData {
     opening_data: OpeningData,
     player_data: Vec<PlayerData>,
+    item_data: Vec<ItemData>,
 }
 impl GameData {
     pub fn load(engine: &mut AnimationEngine) -> anyhow::Result<Self> {
@@ -23,9 +24,17 @@ impl GameData {
         }
         player_data.sort_by_cached_key(|p: &PlayerData| p.index);
 
+        let mut item_data: Vec<ItemData> = {
+            let file = engine.filesystem().open("/game_data/item-data.yml")?;
+            let reader = io::BufReader::new(file);
+            serde_yaml::from_reader(reader)?
+        };
+        item_data.sort_by_cached_key(|i: &ItemData| i.id);
+
         Ok(Self {
             opening_data,
             player_data,
+            item_data,
         })
     }
 
@@ -35,5 +44,9 @@ impl GameData {
 
     pub fn player_data(&self) -> &Vec<PlayerData> {
         &self.player_data
+    }
+
+    pub fn item_data(&self) -> &Vec<ItemData> {
+        &self.item_data
     }
 }

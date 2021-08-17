@@ -9,6 +9,7 @@ use std::collections::VecDeque;
 use std::time::Duration;
 
 use crate::game::game;
+use crate::game::player_state::*;
 use crate::game_data::*;
 use crate::input;
 
@@ -461,23 +462,420 @@ impl<'a> Drop for ConfirmOverrideSkillWindow<'a> {
 
 struct SkillItemListWindow<'a> {
     cx: &'a AnimationEngineContext,
+    cover: Entity,
+    part_0: Entity,
+    part_1: Entity,
+    part_2: Entity,
+    part_3: Entity,
+    part_4: Entity,
+    message_text: Entity,
+    header_text: Entity,
+    description: Entity,
+    list: Vec<Entity>,
 }
 impl<'a> SkillItemListWindow<'a> {
     fn new(cx: &'a AnimationEngineContext) -> Self {
-        Self { cx }
+        let cover = cx.add_rect(AddRectInfo {
+            width: 1280.0,
+            height: 720.0,
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.0,
+            z: 100,
+            ..Default::default()
+        });
+        let part_0 = cx.add_image(AddImageInfo {
+            name: "/image/ui/explore-part-12.png".into(),
+            x: 38.0,
+            y: 200.0,
+            z: 110,
+            a: 0.0,
+            ..Default::default()
+        });
+        let part_1 = cx.add_image(AddImageInfo {
+            name: "/image/ui/explore-part-13.png".into(),
+            z: 115,
+            a: 0.0,
+            ..Default::default()
+        });
+        let part_2 = cx.add_image(AddImageInfo {
+            name: "/image/ui/explore-part-14.png".into(),
+            x: 500.0,
+            y: 148.0,
+            z: 110,
+            a: 0.0,
+            ..Default::default()
+        });
+        let part_3 = cx.add_image(AddImageInfo {
+            name: "/image/ui/explore-part-15.png".into(),
+            x: 125.0,
+            y: 110.0,
+            z: 110,
+            a: 0.0,
+            ..Default::default()
+        });
+        let part_4 = cx.add_image(AddImageInfo {
+            name: "/image/ui/explore-part-16.png".into(),
+            x: 140.0,
+            y: 20.0,
+            z: 110,
+            a: 0.0,
+            ..Default::default()
+        });
+        let message_text = cx.add_text(AddTextInfo {
+            font_size: 24.0,
+            x: 170.0,
+            y: 45.0,
+            z: 120,
+            a: 0.0,
+            ..Default::default()
+        });
+        let header_text = cx.add_text(AddTextInfo {
+            font_size: 24.0,
+            x: 190.0,
+            y: 140.0,
+            z: 120,
+            a: 0.0,
+            ..Default::default()
+        });
+        let description = cx.add_text(AddTextInfo {
+            font_size: 24.0,
+            x: 610.0,
+            y: 180.0,
+            z: 120,
+            a: 0.0,
+            ..Default::default()
+        });
+        let list = (0..15)
+            .map(|i| {
+                cx.add_text(AddTextInfo {
+                    font_size: 24.0,
+                    x: 135.0 - 30.0 * i as f32 * 0.1763269807,
+                    y: 230.0 + 30.0 * i as f32,
+                    z: 120,
+                    ..Default::default()
+                })
+            })
+            .collect();
+        Self {
+            cx,
+            cover,
+            part_0,
+            part_1,
+            part_2,
+            part_3,
+            part_4,
+            message_text,
+            header_text,
+            description,
+            list,
+        }
     }
 
-    async fn get_skill(&self) -> usize {
+    async fn add_skill(
+        &self,
+        player_data: &mut PlayerData,
+        skill_id_list: &[usize],
+        skill_list: &Vec<SkillData>,
+    ) -> usize {
         let flag = ConfirmGetSkillWindow::new(self.cx).confirm().await;
         let flag = ConfirmOverrideSkillWindow::new(self.cx).confirm().await;
         0
     }
 
-    async fn show_skill_and_item(&self) {}
+    fn set_cursor(&self, view_top_index: usize, cursor_index: usize, len: usize) {
+        let i = cursor_index - view_top_index;
+        self.cx
+            .set_position(
+                self.part_1,
+                125.0 - 30.0 * i as f32 * 0.1763269807,
+                220.0 + 30.0 * i as f32,
+                115,
+            )
+            .unwrap();
+        if len > 0 {
+            self.cx.set_opacity(self.part_1, 1.0).unwrap();
+        } else {
+            self.cx.set_opacity(self.part_1, 0.0).unwrap();
+        }
+    }
+
+    fn set_owned_skills(
+        &self,
+        view_top_index: usize,
+        cursor_index: usize,
+        player_state: &PlayerState,
+        player_data: &PlayerData,
+    ) {
+        let mut skills = player_state.get_skills();
+        skills.sort_by_key(|skill| {
+            player_data
+                .skills
+                .iter()
+                .find(|s| &s.id == skill)
+                .unwrap()
+                .skill_type
+        });
+        for index in view_top_index..(view_top_index + 15) {
+            if let Some(skill) = skills.get(index) {
+                let key = player_data
+                    .skills
+                    .iter()
+                    .find(|s| &s.id == skill)
+                    .unwrap()
+                    .skill_name_with_level
+                    .to_owned();
+                self.cx.set_text_key(self.list[index], key).unwrap();
+            } else {
+                self.cx.set_text_key(self.list[index], "").unwrap();
+            }
+        }
+        if let Some(skill) = skills.get(cursor_index) {
+            let key = player_data
+                .skills
+                .iter()
+                .find(|s| &s.id == skill)
+                .unwrap()
+                .skill_description
+                .to_owned();
+            self.cx.set_text_key(self.description, key).unwrap();
+        } else {
+            self.cx.set_text_key(self.description, "").unwrap();
+        }
+    }
+
+    fn set_owned_items(
+        &self,
+        view_top_index: usize,
+        cursor_index: usize,
+        player_state: &PlayerState,
+        item_data: &Vec<ItemData>,
+    ) {
+        let mut items = player_state.get_items();
+        items.sort_by_key(|(item, _)| item_data.iter().find(|i| &i.id == item).unwrap().id);
+        for index in view_top_index..(view_top_index + 15) {
+            if let Some((item, count)) = items.get(index) {
+                let key = item_data
+                    .iter()
+                    .find(|i| &i.id == item)
+                    .unwrap()
+                    .item_name_with_count
+                    .to_owned();
+                self.cx.set_text_key(self.list[index], key).unwrap();
+                self.cx
+                    .set_text_format_args(self.list[index], &[&count.to_string()])
+                    .unwrap();
+            } else {
+                self.cx.set_text_key(self.list[index], "").unwrap();
+            }
+        }
+        if let Some((item, _)) = items.get(cursor_index) {
+            let key = item_data
+                .iter()
+                .find(|i| &i.id == item)
+                .unwrap()
+                .item_description
+                .to_owned();
+            self.cx.set_text_key(self.description, key).unwrap();
+        } else {
+            self.cx.set_text_key(self.description, "").unwrap();
+        }
+    }
+
+    async fn show_skills_and_items(
+        &self,
+        player_state: &PlayerState,
+        player_data: &PlayerData,
+        item_data: &Vec<ItemData>,
+    ) {
+        trace!("Open skills and items menu");
+
+        self.cx
+            .set_text_key(self.message_text, "explore-check-skills-and-items")
+            .unwrap();
+        self.cx
+            .set_text_key(self.header_text, "explore-header-owned-skills")
+            .unwrap();
+
+        let mut view_top_index = [0, 0];
+        let mut cursor_index = [0, 0];
+        let mut page = 0;
+        let len = [
+            player_state.get_skills().len(),
+            player_state.get_items().len(),
+        ];
+
+        self.set_cursor(view_top_index[page], cursor_index[page], len[page]);
+        self.set_owned_skills(
+            view_top_index[page],
+            cursor_index[page],
+            player_state,
+            player_data,
+        );
+
+        try_join!(
+            self.cx.play_animation(
+                self.cover,
+                "/animation/explore/skill-item-list-cover-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.part_0,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.part_2,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.part_3,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.part_4,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.message_text,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.header_text,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            self.cx.play_animation(
+                self.description,
+                "/animation/explore/skill-item-list-fade-in.yml"
+            ),
+            futures::future::join_all(self.list.iter().map(|&entity| {
+                self.cx
+                    .play_animation(entity, "/animation/explore/skill-item-list-fade-in.yml")
+            }))
+            .map(|_| Ok(())),
+        )
+        .expect("animation not found");
+
+        loop {
+            select! {
+                _ = input::wait_up(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    if len[page] > 0 {
+                        cursor_index[page] = (cursor_index[page] - 1 + len[page]) % len[page];
+                    }
+                    if cursor_index[page] < view_top_index[page] {
+                        view_top_index[page] = cursor_index[page]
+                    }
+                    if cursor_index[page] > view_top_index[page] + 15 {
+                        view_top_index[page] = cursor_index[page] - 15
+                    }
+                },
+                _ = input::wait_down(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    if len[page] > 0 {
+                        cursor_index[page] = (cursor_index[page] + 1 + len[page]) % len[page];
+                    }
+                    if cursor_index[page] < view_top_index[page] {
+                        view_top_index[page] = cursor_index[page]
+                    }
+                    if cursor_index[page] > view_top_index[page] + 15 {
+                        view_top_index[page] = cursor_index[page] - 15
+                    }
+                },
+                _ = input::wait_left(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    page = (page + 1) % 2;
+                },
+                _ = input::wait_right(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    page = (page + 1) % 2;
+                },
+                _ = input::wait_cancel_button(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                    break;
+                },
+            }
+            if page == 0 {
+                self.cx
+                    .set_text_key(self.header_text, "explore-header-owned-skills")
+                    .unwrap();
+                self.set_owned_skills(
+                    view_top_index[page],
+                    cursor_index[page],
+                    player_state,
+                    player_data,
+                );
+            } else {
+                self.cx
+                    .set_text_key(self.header_text, "explore-header-owned-items")
+                    .unwrap();
+                self.set_owned_items(
+                    view_top_index[page],
+                    cursor_index[page],
+                    player_state,
+                    item_data,
+                );
+            }
+            self.set_cursor(view_top_index[page], cursor_index[page], len[page]);
+            delay(Duration::from_millis(150)).await;
+        }
+
+        self.cx.set_opacity(self.part_1, 0.0).unwrap();
+        try_join!(
+            self.cx.play_animation(
+                self.cover,
+                "/animation/explore/skill-item-list-cover-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.part_0,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.part_2,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.part_3,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.part_4,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.message_text,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.header_text,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            self.cx.play_animation(
+                self.description,
+                "/animation/explore/skill-item-list-fade-out.yml"
+            ),
+            futures::future::join_all(self.list.iter().map(|&entity| {
+                self.cx
+                    .play_animation(entity, "/animation/explore/skill-item-list-fade-out.yml")
+            }))
+            .map(|_| Ok(())),
+        )
+        .expect("animation not found");
+    }
 }
 impl<'a> Drop for SkillItemListWindow<'a> {
     fn drop(&mut self) {
-        //
+        self.cx.delete_entity(self.cover);
+        self.cx.delete_entity(self.part_0);
+        self.cx.delete_entity(self.part_1);
+        self.cx.delete_entity(self.part_2);
+        self.cx.delete_entity(self.part_3);
+        self.cx.delete_entity(self.part_4);
+        self.cx.delete_entity(self.message_text);
+        self.cx.delete_entity(self.header_text);
+        self.cx.delete_entity(self.description);
+        for &item in self.list.iter() {
+            self.cx.delete_entity(item);
+        }
     }
 }
 
@@ -750,6 +1148,7 @@ pub struct ExploreScene<'a> {
     current_depth: CurrentDepth<'a>,
     background: Background<'a>,
     message_list: MessageList<'a>,
+    skill_item_list_window: SkillItemListWindow<'a>,
 }
 impl<'a> ExploreScene<'a> {
     fn new(cx: &'a AnimationEngineContext, player_index: usize, max_depth: u32) -> Self {
@@ -758,6 +1157,7 @@ impl<'a> ExploreScene<'a> {
         let current_depth = CurrentDepth::new(cx, max_depth);
         let background = Background::new(cx);
         let message_list = MessageList::new(cx);
+        let skill_item_list_window = SkillItemListWindow::new(cx);
         Self {
             cx,
             player_index,
@@ -766,6 +1166,7 @@ impl<'a> ExploreScene<'a> {
             current_depth,
             background,
             message_list,
+            skill_item_list_window,
         }
     }
 
@@ -779,11 +1180,16 @@ impl<'a> ExploreScene<'a> {
     async fn wait_move_forward(&self) {
         select! {
             _ = input::wait_select_button(self.cx).fuse() => (),
-            _ = self.menu_and_options().fuse() => (),
+            _ = self.menu_and_options().fuse() => unreachable!(),
         }
     }
 
     async fn start(&mut self, global_data: &mut game::GlobalData) -> anyhow::Result<()> {
+        let mut player_state = PlayerState::new();
+
+        let player_data = &global_data.game_data().player_data()[self.player_index];
+        let item_data = global_data.game_data().item_data();
+
         self.cx.play_bgm("field-0");
         self.cover.fade_in().await;
 
@@ -794,6 +1200,35 @@ impl<'a> ExploreScene<'a> {
             self.message_list.add_normal_message(message).await;
             self.wait_move_forward().await;
             self.current_depth.increment();
+        }
+
+        self.message_list.add_normal_message("message").await;
+        select! {
+            _ = self.skill_item_list_window
+                .show_skills_and_items(&player_state, player_data, item_data)
+                .fuse() => (),
+            _ = self.menu_and_options().fuse() => unreachable!(),
+        }
+
+        player_state.add_item(0);
+        player_state.add_item(0);
+        player_state.add_item(0);
+        player_state.add_item(0);
+        player_state.add_item(1);
+        player_state.add_item(2);
+        player_state.add_item(3);
+        player_state.add_item(4);
+        player_state.add_skill(0, &player_data.skills);
+        player_state.add_skill(1, &player_data.skills);
+        player_state.add_skill(2, &player_data.skills);
+        player_state.add_skill(3, &player_data.skills);
+
+        self.message_list.add_normal_message("message").await;
+        select! {
+            _ = self.skill_item_list_window
+                .show_skills_and_items(&player_state, player_data, item_data)
+                .fuse() => (),
+            _ = self.menu_and_options().fuse() => unreachable!(),
         }
 
         self.message_list

@@ -8,6 +8,7 @@ texts:
   user-guide: User Guide
   options: Options
   exit: Exit
+
   user-guide-title: 操作方法
   user-guide-1: 決定/次へ進む
   user-guide-2: キャンセル/閉じる
@@ -19,6 +20,7 @@ texts:
   user-guide-x: キャンセル/閉じる
   user-guide-c: メニュー/オプション
   user-guide-arrow: カーソル移動
+
   options-title: 設定
   options-language: 言語
   options-language-name: 日本語 (Original)
@@ -41,6 +43,7 @@ texts:
   options-volume-140: 140%
   options-volume-150: 150%
   options-exit: 閉じる
+
   opening-prologue-0-0: |-
     あの悪夢のはじまりから8年。
     《緑域》――グリニッシュ――の侵食は
@@ -229,7 +232,13 @@ texts:
   opening-player-1-confirm: |-
     「連撃のハルバーディア」で
     探索を始めますか？
+
   explore-current-depth: '{}/{}'
+  explore-check-skills-and-items: 所持スキルと所持アイテムの確認をします
+  explore-header-owned-skills: 所持スキル
+  explore-header-owned-items: 所持アイテム
+  explore-depth: 深度
+
   message1: |-
     早朝の静けさの中に魔物たちの活動する僅かな気配が感じられる。
     あなたは魔物の活動が比較的穏やかになる時間帯を選んで出発をする。
@@ -241,6 +250,7 @@ texts:
   message5: メッセージ 5
   message6: メッセージ 6
   message-choice: メッセージ
+  message: スキルとアイテムを確認します
   choice1: |-
     選択肢 1
     選択肢 1
@@ -250,4 +260,99 @@ texts:
     選択肢 3
     選択肢 3
   choice4: 選択肢 4
-  explore-depth: 深度
+  player-0-skill-name-0: 毒マスタリ
+  player-0-skill-name-0-level-1: 毒マスタリ Lv1
+  player-0-skill-name-0-level-2: 毒マスタリ Lv2
+  player-0-skill-description-0-level-1: |-
+    [パッシブ]
+
+    毒薬を扱う技能の基礎となるスキル。
+
+    毒の基礎ダメージ +25
+  player-0-skill-description-0-level-2: |-
+    [パッシブ]
+
+    毒薬を扱う技能の基礎となるスキル。
+
+    毒の基礎ダメージ +50
+  player-0-skill-name-1: 毒薬補充
+  player-0-skill-name-1-level-1: 毒薬補充 Lv1
+  player-0-skill-description-1-level-1: |-
+    毒薬を背嚢から手元に補充するスキル。
+
+    TPを20回復する。
+  player-0-skill-name-2: ポイズンドラッグ
+  player-0-skill-name-2-level-1: ポイズンドラッグ Lv1
+  player-0-skill-description-2-level-1: |-
+    敵に毒薬を浴びせるスキル。
+
+    消費TP 15
+
+    敵を3ターンの間毒状態にする。
+    また、既に毒状態の敵の毒を3ターン延長する。
+
+  player-1-skill-name-0: 連撃マスタリ
+  player-1-skill-name-0-level-1: 連撃マスタリ Lv1
+  player-1-skill-name-0-level-2: 連撃マスタリ Lv2
+  player-1-skill-description-0-level-1: |-
+    [パッシブ]
+
+    連撃スキルの基礎となるスキル。
+    連撃スキルを使用すると連撃数が加算される。
+    連撃スキル以外の行動をすると連撃数はリセットされる。
+
+    通常攻撃が連撃数1の連撃スキルとなる。
+
+    最大連撃回数 3
+  player-1-skill-description-0-level-2: |-
+    [パッシブ]
+
+    連撃スキルの基礎となるスキル。
+    連撃スキルを使用すると連撃数が加算される。
+    連撃スキル以外の行動をすると連撃数はリセットされる。
+
+    通常攻撃が連撃数1の連撃スキルとなる。
+
+    最大連撃回数 5
+  player-1-skill-name-1: 戦意高揚
+  player-1-skill-name-1-level-1: 戦意高揚 Lv1
+  player-1-skill-description-1-level-1: |-
+    連撃の勢いを戦意高揚につなげるスキル。
+
+    連撃数3以上のときに使用可能。
+
+    TPを30回復する。
+  player-1-skill-name-2: ダブルスラッシュ
+  player-1-skill-name-2-level-1: ダブルスラッシュ Lv1
+  player-1-skill-description-2-level-1: |-
+    [連撃スキル]
+
+    連撃数 +2
+    消費TP 10
+
+    敵に2回攻撃を仕掛けるスキル。
+
+  item-name-0: ポーション
+  item-name-with-count-0: ポーション x{}
+  item-description-0: |-
+    体力を150回復する。
+  item-name-1: ハイポーション
+  item-name-with-count-1: ハイポーション x{}
+  item-description-1: |-
+    体力を300回復する。
+  item-name-2: リフレインポーション
+  item-name-with-count-2: リフレインポーション x{}
+  item-description-2: |-
+    3ターンの間、毎ターン体力を
+    100回復する強化を付与する。
+  item-name-3: 回生の札
+  item-name-with-count-3: 回生の札 x{}
+  item-description-3: |-
+    体力が0になったときに
+    自動でこのアイテムは消費される。
+    アイテムが消費されたとき、
+    体力を最大まで回復する。
+  item-name-4: 百中のお守り
+  item-name-with-count-4: 百中のお守り x{}
+  item-description-4: |-
+    次のターンの攻撃が必中となる。

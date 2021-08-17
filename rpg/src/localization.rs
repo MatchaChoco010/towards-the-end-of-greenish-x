@@ -61,7 +61,7 @@ impl LocalizeTexts {
         let text = info
             .texts
             .get(key)
-            .expect("no text data in localization file")
+            .expect(&format!("no text data in localization file: {}", key))
             .to_owned();
         LocalizeText::new(font_name, text)
     }
