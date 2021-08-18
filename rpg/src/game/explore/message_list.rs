@@ -9,6 +9,7 @@ use crate::input;
 
 const MESSAGE_LIST_ITEM_SPACE: f32 = 15.0;
 const MESSAGE_CHOICE_ITEM_SPACE: f32 = 5.0;
+const MESSAGE_SPACE_HEIGHT: f32 = 65.0;
 
 enum MessageListItem<'a> {
     NormalMessage {
@@ -456,5 +457,14 @@ impl<'a> MessageList<'a> {
             .choice()
             .await
             .ok_or(anyhow::Error::msg("Last message is not choice type"))
+    }
+
+    pub(super) async fn add_space(&mut self) {
+        for _ in 0..30 {
+            for item in self.items.iter_mut() {
+                item.set_pos(item.get_pos() + MESSAGE_SPACE_HEIGHT / 30.0);
+            }
+            next_frame().await;
+        }
     }
 }

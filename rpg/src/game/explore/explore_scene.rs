@@ -137,13 +137,17 @@ impl<'a> ExploreScene<'a> {
             self.message_list.add_normal_message("message1").await;
             self.wait_move_forward(player_state, player_data, item_data, save_data)
                 .await;
+            self.message_list.add_normal_message("message1").await;
+            self.wait_move_forward(player_state, player_data, item_data, save_data)
+                .await;
 
             let skills = player_data.skills.iter().map(|s| s.id).collect::<Vec<_>>();
             self.wait_add_skill(&skills, player_state, player_data)
                 .await;
+            self.current_depth.increment();
+            self.message_list.add_space().await;
             self.wait_move_forward(player_state, player_data, item_data, save_data)
                 .await;
-            self.current_depth.increment();
         }
 
         // let messages = [
