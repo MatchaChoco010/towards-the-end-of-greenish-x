@@ -17,6 +17,7 @@ pub struct SkillData {
     pub skill_name: String,
     pub skill_name_with_level: String,
     pub skill_description: String,
+    pub get_skill_confirm_message: String,
 }
 
 #[derive(Deserialize)]

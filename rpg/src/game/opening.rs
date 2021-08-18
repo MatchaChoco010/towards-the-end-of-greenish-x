@@ -785,16 +785,20 @@ impl<'a> OpeningScene<'a> {
         self.cx.play_bgm("opening");
         self.enter_animation().await;
 
-        let game_data = global_data.game_data();
+        let game_data = &global_data.game_data;
         let index = match game_data.opening_data() {
             OpeningData::Random { data } => {
                 let dist = WeightedIndex::new(data.iter().map(|(w, _)| w)).unwrap();
-                dist.sample(&mut *global_data.rng())
+                dist.sample(&mut *global_data.rng.borrow_mut())
             }
             _ => unreachable!(),
         };
-        self.prologue_index(index, game_data.opening_data(), &mut global_data.rng())
-            .await;
+        self.prologue_index(
+            index,
+            game_data.opening_data(),
+            &mut *global_data.rng.borrow_mut(),
+        )
+        .await;
         let player_index = self.player_select(game_data.player_data()).await;
         self.player_prologue(index, &game_data.player_data()[player_index.0])
             .await;

@@ -368,7 +368,7 @@ impl<'a> TitleScene<'a> {
                         }
                         3 => {
                             self.cx.play_sfx("/audio/sfx/select.ogg");
-                            options::options(self.cx, global_data).await;
+                            options::options(self.cx, &mut global_data.save_data).await;
                         }
                         4 => {
                             self.cx.play_sfx("/audio/sfx/cancel.ogg");
@@ -380,7 +380,7 @@ impl<'a> TitleScene<'a> {
                 }
                 _ = input::wait_sub_button(self.cx).fuse() => {
                     self.cx.play_sfx("/audio/sfx/select.ogg");
-                    options::options(self.cx, global_data).await;
+                    options::options(self.cx, &mut global_data.save_data).await;
                 }
             }
             next_frame().await;

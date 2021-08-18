@@ -235,9 +235,27 @@ texts:
 
   explore-current-depth: '{}/{}'
   explore-check-skills-and-items: 所持スキルと所持アイテムの確認をします
+  explore-add-skill: 新しくスキルを習得します
   explore-header-owned-skills: 所持スキル
   explore-header-owned-items: 所持アイテム
+  explore-header-new-skill: 習得可能スキル
+  explore-get-no-skill: '[スキルを習得しない]'
+  explore-get-no-skill-description: |-
+    スキルを習得せずに終了します。
+  explore-get-no-skill-confirm-message: スキルを習得せずに終了しますか？
+  explore-get-no-skill-confirm-yes-text: 終了する
+  explore-get-no-skill-confirm-no-text: 別のスキルを選ぶ
+  explore-get-skill-confirm-message: 「{}」を習得しますか？
+  explore-get-skill-confirm-yes-text: 習得する
+  explore-get-skill-confirm-no-text: 別のスキルを選ぶ
+  explore-override-skill-confirm-message: |-
+    同じ種類のスキルは上書きされますがよろしいですか？
+  explore-override-skill-confirm-yes-text: 上書きする
+  explore-override-skill-confirm-no-text: 別のスキルを選ぶ
   explore-depth: 深度
+  explore-tutorial-x-key: |-
+    （Xキーでスキル・アイテムウィンドウを開きます。
+     所持しているスキルとアイテムの確認が行なえます)
 
   message1: |-
     早朝の静けさの中に魔物たちの活動する僅かな気配が感じられる。
@@ -263,6 +281,7 @@ texts:
   player-0-skill-name-0: 毒マスタリ
   player-0-skill-name-0-level-1: 毒マスタリ Lv1
   player-0-skill-name-0-level-2: 毒マスタリ Lv2
+  player-0-skill-name-0-level-3: 毒マスタリ Lv3
   player-0-skill-description-0-level-1: |-
     [パッシブ]
 
@@ -275,12 +294,26 @@ texts:
     毒薬を扱う技能の基礎となるスキル。
 
     毒の基礎ダメージ +50
+  player-0-skill-description-0-level-3: |-
+    [パッシブ]
+
+    毒薬を扱う技能の基礎となるスキル。
+
+    毒の基礎ダメージ +60
+  player-0-get-skill-confirm-message-0-level-1: |-
+    「毒マスタリ Lv1」を習得しますか？
+  player-0-get-skill-confirm-message-0-level-2: |-
+    「毒マスタリ Lv2」を習得しますか？
+  player-0-get-skill-confirm-message-0-level-3: |-
+    「毒マスタリ Lv3」を習得しますか？
   player-0-skill-name-1: 毒薬補充
   player-0-skill-name-1-level-1: 毒薬補充 Lv1
   player-0-skill-description-1-level-1: |-
     毒薬を背嚢から手元に補充するスキル。
 
     TPを20回復する。
+  player-0-get-skill-confirm-message-1-level-1: |-
+    「毒薬補充 Lv1」を習得しますか？
   player-0-skill-name-2: ポイズンドラッグ
   player-0-skill-name-2-level-1: ポイズンドラッグ Lv1
   player-0-skill-description-2-level-1: |-
@@ -290,10 +323,13 @@ texts:
 
     敵を3ターンの間毒状態にする。
     また、既に毒状態の敵の毒を3ターン延長する。
+  player-0-get-skill-confirm-message-2-level-1: |-
+    「ポイズンドラッグ Lv1」を習得しますか？
 
   player-1-skill-name-0: 連撃マスタリ
   player-1-skill-name-0-level-1: 連撃マスタリ Lv1
   player-1-skill-name-0-level-2: 連撃マスタリ Lv2
+  player-1-skill-name-0-level-3: 連撃マスタリ Lv3
   player-1-skill-description-0-level-1: |-
     [パッシブ]
 
@@ -314,6 +350,22 @@ texts:
     通常攻撃が連撃数1の連撃スキルとなる。
 
     最大連撃回数 5
+  player-1-skill-description-0-level-3: |-
+    [パッシブ]
+
+    連撃スキルの基礎となるスキル。
+    連撃スキルを使用すると連撃数が加算される。
+    連撃スキル以外の行動をすると連撃数はリセットされる。
+
+    通常攻撃が連撃数1の連撃スキルとなる。
+
+    最大連撃回数 6
+  player-1-get-skill-confirm-message-0-level-1: |-
+    「連撃マスタリ Lv1」を習得しますか？
+  player-1-get-skill-confirm-message-0-level-2: |-
+    「連撃マスタリ Lv2」を習得しますか？
+  player-1-get-skill-confirm-message-0-level-3: |-
+    「連撃マスタリ Lv3」を習得しますか？
   player-1-skill-name-1: 戦意高揚
   player-1-skill-name-1-level-1: 戦意高揚 Lv1
   player-1-skill-description-1-level-1: |-
@@ -322,6 +374,8 @@ texts:
     連撃数3以上のときに使用可能。
 
     TPを30回復する。
+  player-1-get-skill-confirm-message-1-level-1: |-
+    「戦意高揚 Lv1」を習得しますか？
   player-1-skill-name-2: ダブルスラッシュ
   player-1-skill-name-2-level-1: ダブルスラッシュ Lv1
   player-1-skill-description-2-level-1: |-
@@ -331,6 +385,8 @@ texts:
     消費TP 10
 
     敵に2回攻撃を仕掛けるスキル。
+  player-1-get-skill-confirm-message-2-level-1: |-
+    「ダブルスラッシュ Lv1」を習得しますか？
 
   item-name-0: ポーション
   item-name-with-count-0: ポーション x{}

@@ -1,9 +1,9 @@
-len: 60
+len: 20
 fps: 60
 data:
   - - Opacity_opacity
     - keys:
         - frame: 1
           value: 1.0
-        - frame: 60
+        - frame: 20
           value: 0.0

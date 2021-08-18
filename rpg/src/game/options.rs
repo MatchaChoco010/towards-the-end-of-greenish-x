@@ -4,9 +4,9 @@ use futures::{select, try_join, FutureExt};
 use log::{info, trace};
 use std::time::Duration;
 
-use crate::game::game;
 use crate::input;
 use crate::localization;
+use crate::save_data;
 
 struct Options<'a> {
     cx: &'a AnimationEngineContext,
@@ -253,18 +253,18 @@ impl<'a> Options<'a> {
         trace!("Finish Options close animation");
     }
 
-    async fn start(&self, global_data: &mut game::GlobalData) {
+    async fn start(&self, save_data: &mut save_data::SaveData) {
         self.cx.play_sfx("/audio/sfx/menu.ogg");
         self.cx
             .set_text_key(
                 self.text_bgm_value,
-                Self::volume_to_key(global_data.save_data().bgm_volume()),
+                Self::volume_to_key(save_data.bgm_volume()),
             )
             .unwrap();
         self.cx
             .set_text_key(
                 self.text_sfx_value,
-                Self::volume_to_key(global_data.save_data().sfx_volume()),
+                Self::volume_to_key(save_data.sfx_volume()),
             )
             .unwrap();
         self.enter_animation().await;
@@ -309,32 +309,32 @@ impl<'a> Options<'a> {
                     match index {
                         0 => {
                             self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                            global_data.save_data().bgm_volume_down()
+                            save_data.bgm_volume_down()
                                 .expect("Failed to down bgm volume");
                             self.cx
                                 .set_text_key(
                                     self.text_bgm_value,
-                                    Self::volume_to_key(global_data.save_data().bgm_volume()),
+                                    Self::volume_to_key(save_data.bgm_volume()),
                                 )
                                 .unwrap();
                         },
                         1 => {
                             self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                            global_data.save_data().sfx_volume_down()
+                            save_data.sfx_volume_down()
                                 .expect("Failed to down sfx volume");
                             self.cx
                                 .set_text_key(
                                     self.text_sfx_value,
-                                    Self::volume_to_key(global_data.save_data().sfx_volume()),
+                                    Self::volume_to_key(save_data.sfx_volume()),
                                 )
                                 .unwrap();
                         },
                         2 => {
                             self.cx.play_sfx("/audio/sfx/cursor.ogg");
                             let len = localization::len();
-                            let lang = global_data.save_data().language();
+                            let lang = save_data.language();
                             let lang = (lang + len - 1) % len;
-                            global_data.save_data().set_language(lang)
+                            save_data.set_language(lang)
                                 .expect("Failed to change language");
                         }
                         3 => (),
@@ -346,32 +346,32 @@ impl<'a> Options<'a> {
                     match index {
                         0 => {
                             self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                            global_data.save_data().bgm_volume_up()
+                            save_data.bgm_volume_up()
                                 .expect("Failed to down bgm volume");
                             self.cx
                                 .set_text_key(
                                     self.text_bgm_value,
-                                    Self::volume_to_key(global_data.save_data().bgm_volume()),
+                                    Self::volume_to_key(save_data.bgm_volume()),
                                 )
                                 .unwrap();
                         },
                         1 => {
                             self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                            global_data.save_data().sfx_volume_up()
+                            save_data.sfx_volume_up()
                                 .expect("Failed to down sfx volume");
                             self.cx
                                 .set_text_key(
                                     self.text_sfx_value,
-                                    Self::volume_to_key(global_data.save_data().sfx_volume()),
+                                    Self::volume_to_key(save_data.sfx_volume()),
                                 )
                                 .unwrap();
                         },
                         2 => {
                             self.cx.play_sfx("/audio/sfx/cursor.ogg");
                             let len = localization::len();
-                            let lang = global_data.save_data().language();
+                            let lang = save_data.language();
                             let lang = (lang + len + 1) % len;
-                            global_data.save_data().set_language(lang)
+                            save_data.set_language(lang)
                                 .expect("Failed to change language");
                         }
                         3 => (),
@@ -386,7 +386,7 @@ impl<'a> Options<'a> {
                 }
                 _ = input::wait_cancel_button(self.cx).fuse() => break,
             }
-            global_data.save_data().apply(self.cx);
+            save_data.apply(self.cx);
             next_frame().await;
         }
 
@@ -413,7 +413,7 @@ impl<'a> Drop for Options<'a> {
     }
 }
 
-pub async fn options(cx: &AnimationEngineContext, global_data: &mut game::GlobalData) {
+pub async fn options(cx: &AnimationEngineContext, save_data: &mut save_data::SaveData) {
     info!("Enter Options");
-    Options::new(cx).start(global_data).await;
+    Options::new(cx).start(save_data).await;
 }

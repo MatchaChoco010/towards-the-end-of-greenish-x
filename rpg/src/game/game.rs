@@ -3,7 +3,7 @@ use animation_engine::*;
 use futures::Future;
 use log::{info, trace};
 use rand::prelude::*;
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::pin::Pin;
 
 use crate::game::*;
@@ -11,11 +11,11 @@ use crate::game_data;
 use crate::save_data;
 
 pub struct GlobalData {
-    rng: RefCell<ThreadRng>,
+    pub rng: RefCell<ThreadRng>,
     cx: AnimationEngineContext,
     overlay_image: Entity,
-    save_data: save_data::SaveData,
-    game_data: game_data::GameData,
+    pub save_data: save_data::SaveData,
+    pub game_data: game_data::GameData,
 }
 impl GlobalData {
     pub fn load(engine: &mut AnimationEngine) -> anyhow::Result<Self> {
@@ -43,18 +43,6 @@ impl GlobalData {
             game_data,
         })
     }
-
-    pub fn rng(&self) -> RefMut<ThreadRng> {
-        self.rng.borrow_mut()
-    }
-
-    pub fn save_data(&mut self) -> &mut save_data::SaveData {
-        &mut self.save_data
-    }
-
-    pub fn game_data(&self) -> &game_data::GameData {
-        &self.game_data
-    }
 }
 impl Drop for GlobalData {
     fn drop(&mut self) {
@@ -67,7 +55,7 @@ impl Drop for GlobalData {
 
 async fn main(cx: AnimationEngineContext, mut global_data: GlobalData) {
     cx.change_clear_color((0, 0, 0));
-    global_data.save_data().apply(&cx);
+    global_data.save_data.apply(&cx);
 
     loop {
         if let title::TitleResult::Exit = title::title(&cx, &mut global_data).await {

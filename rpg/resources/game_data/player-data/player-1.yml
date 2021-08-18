@@ -19,21 +19,34 @@ skills:
     skill_name: player-1-skill-name-0
     skill_name_with_level: player-1-skill-name-0-level-1
     skill_description: player-1-skill-description-0-level-1
+    get_skill_confirm_message: player-1-get-skill-confirm-message-0-level-1
   - id: 1
-    skill_type: 1
-    reality: 0
-    skill_name: player-1-skill-name-1
-    skill_name_with_level: player-1-skill-name-1-level-1
-    skill_description: player-1-skill-description-1-level-1
-  - id: 2
-    skill_type: 2
-    reality: 0
-    skill_name: player-1-skill-name-2
-    skill_name_with_level: player-1-skill-name-2-level-1
-    skill_description: player-1-skill-description-2-level-1
-  - id: 3
     skill_type: 0
     reality: 1
     skill_name: player-1-skill-name-0
     skill_name_with_level: player-1-skill-name-0-level-2
     skill_description: player-1-skill-description-0-level-2
+    get_skill_confirm_message: player-1-get-skill-confirm-message-0-level-2
+  - id: 2
+    skill_type: 0
+    reality: 1
+    skill_name: player-1-skill-name-0
+    skill_name_with_level: player-1-skill-name-0-level-3
+    skill_description: player-1-skill-description-0-level-3
+    get_skill_confirm_message: player-1-get-skill-confirm-message-0-level-3
+
+  - id: 10
+    skill_type: 1
+    reality: 0
+    skill_name: player-1-skill-name-1
+    skill_name_with_level: player-1-skill-name-1-level-1
+    skill_description: player-1-skill-description-1-level-1
+    get_skill_confirm_message: player-1-get-skill-confirm-message-1-level-1
+
+  - id: 20
+    skill_type: 2
+    reality: 0
+    skill_name: player-1-skill-name-2
+    skill_name_with_level: player-1-skill-name-2-level-1
+    skill_description: player-1-skill-description-2-level-1
+    get_skill_confirm_message: player-1-get-skill-confirm-message-2-level-1

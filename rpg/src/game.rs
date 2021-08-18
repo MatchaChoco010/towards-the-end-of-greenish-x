@@ -7,3 +7,4 @@ mod title;
 mod user_guide;
 
 pub use game::*;
+pub use player_state::*;
