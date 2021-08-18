@@ -1,0 +1,52 @@
+index: 1
+item:
+  Random:
+    branches:
+      - weight: 3.0
+        item:
+          Sequence:
+            items:
+              - Message:
+                  text: text-key-0
+              - Message:
+                  text: text-key-0
+                  blue: true
+              - WaitOpenSkillItemList
+              - ChangeToAfternoon
+              - ChangeToNight
+              - Battle:
+                  id: 5
+              - GetSkill:
+                  skills:
+                    - weight: 1.0
+                      rarity: 1
+                    - weight: 2.0
+                      rarity: 2
+                  count: 5
+      - weight: 1.0
+        item:
+          Choice:
+            text: text-key-1
+            branches:
+              - text: Choice 1
+                text_lines: 1
+                item:
+                  Sequence:
+                    items:
+                      - Message:
+                          text: text-key-0
+                      - Message:
+                          text: text-key-0
+              - text: Choice 2
+                text_lines: 1
+                item: StopBGM
+              - text: Choice 3
+                text_lines: 1
+                item:
+                  ResumeOrPlayBGM:
+                    bgm: 'field-0'
+              - text: Choice 4
+                text_lines: 1
+                item:
+                  PlayBGM:
+                    bgm: 'field-1'

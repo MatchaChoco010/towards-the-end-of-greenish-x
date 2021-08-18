@@ -453,7 +453,7 @@ impl<'a> SkillItemListWindow<'a> {
             }
             if page == 0 {
                 self.cx
-                    .set_text_key(self.header_text, "explore-add-skill")
+                    .set_text_key(self.header_text, "explore-header-new-skill")
                     .unwrap();
                 self.set_new_skills(
                     view_top_index[page],

@@ -1,0 +1,24 @@
+index: 6
+item:
+  Sequence:
+    items:
+      - Message:
+          text: level-6-text-0
+      - Message:
+          text: level-6-text-1
+      - Battle:
+          id: 0
+      - Message:
+          text: level-6-text-2
+      - Message:
+          text: level-6-text-3
+          blue: true
+      - GetSkill:
+          skills:
+            - weight: 1.0
+              rarity: 1
+            - weight: 2.0
+              rarity: 2
+          count: 3
+      - Message:
+          text: level-6-text-4

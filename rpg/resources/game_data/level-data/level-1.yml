@@ -1,0 +1,26 @@
+index: 1
+item:
+  Random:
+    branches:
+      - weight: 1.0
+        item:
+          Sequence:
+            items:
+              - Message:
+                  text: level-1-text-1
+              - Message:
+                  text: level-1-text-2
+              - Message:
+                  text: level-1-text-3
+              - Message:
+                  text: level-1-text-4
+      - weight: 3.0
+        item:
+          Sequence:
+            items:
+              - Message:
+                  text: level-1-text-0
+              - Message:
+                  text: level-1-text-3
+              - Message:
+                  text: level-1-text-4

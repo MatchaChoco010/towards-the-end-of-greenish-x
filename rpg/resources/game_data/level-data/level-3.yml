@@ -1,0 +1,50 @@
+index: 3
+item:
+  Sequence:
+    items:
+      - Message:
+          text: level-3-text-0
+      - Choice:
+          text: level-3-text-1
+          branches:
+            - text: level-3-text-2
+              text_lines: 3
+              item:
+                Sequence:
+                  items:
+                    - AddItem:
+                        item_id: 0
+                        count: 5
+                    - AddItem:
+                        item_id: 1
+                        count: 3
+                    - AddItem:
+                        item_id: 3
+                        count: 1
+            - text: level-3-text-3
+              text_lines: 2
+              item:
+                Sequence:
+                  items:
+                    - AddItem:
+                        item_id: 2
+                        count: 3
+                    - AddItem:
+                        item_id: 3
+                        count: 1
+            - text: level-3-text-4
+              text_lines: 3
+              item:
+                Sequence:
+                  items:
+                    - AddItem:
+                        item_id: 0
+                        count: 3
+                    - AddItem:
+                        item_id: 3
+                        count: 1
+                    - AddItem:
+                        item_id: 4
+                        count: 2
+      - Message:
+          text: level-3-text-5

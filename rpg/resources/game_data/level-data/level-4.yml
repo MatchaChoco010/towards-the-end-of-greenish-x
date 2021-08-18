@@ -1,0 +1,17 @@
+index: 4
+item:
+  Sequence:
+    items:
+      - Message:
+          text: level-4-text-0
+      - Message:
+          text: level-4-text-1
+      - Message:
+          text: level-4-text-2
+          blue: true
+          no_weight: true
+      - WaitOpenSkillItemList
+      - Message:
+          text: level-4-text-3
+      - Message:
+          text: level-4-text-4

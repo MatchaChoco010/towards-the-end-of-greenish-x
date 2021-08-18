@@ -1,0 +1,26 @@
+index: 2
+item:
+  Sequence:
+    items:
+      - Message:
+          text: level-2-text-0
+      - Message:
+          text: level-2-text-1
+          blue: true
+      - GetSkill:
+          skills:
+            - weight: 1.0
+              rarity: 0
+          count: 5
+      - GetSkill:
+          skills:
+            - weight: 1.0
+              rarity: 0
+          count: 5
+      - GetSkill:
+          skills:
+            - weight: 1.0
+              rarity: 0
+          count: 5
+      - Message:
+          text: level-2-text-2

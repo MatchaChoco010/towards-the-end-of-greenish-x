@@ -13,7 +13,8 @@ pub struct PrologueIndex {
 pub struct SkillData {
     pub id: usize,
     pub skill_type: usize,
-    pub reality: u8,
+    pub rarity: u8,
+    pub rarity_weight: f64,
     pub skill_name: String,
     pub skill_name_with_level: String,
     pub skill_description: String,

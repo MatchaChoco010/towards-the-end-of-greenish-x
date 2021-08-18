@@ -1,0 +1,14 @@
+index: 7
+item:
+  Sequence:
+    items:
+      - StopBGM
+      - ChangeToNight
+      - PlayBGM:
+          bgm: field-1
+      - Message:
+          text: level-7-text-0
+      - Message:
+          text: level-7-text-1
+      - Message:
+          text: level-7-text-2

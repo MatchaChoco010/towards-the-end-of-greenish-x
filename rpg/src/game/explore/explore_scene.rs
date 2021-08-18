@@ -21,6 +21,7 @@ pub(super) struct ExploreScene<'a> {
     background: Background<'a>,
     message_list: MessageList<'a>,
     skill_item_list_window: SkillItemListWindow<'a>,
+    current_explore_bgm: String,
 }
 impl<'a> ExploreScene<'a> {
     pub(super) fn new(cx: &'a AnimationEngineContext, player_index: usize, max_depth: u32) -> Self {
@@ -39,6 +40,7 @@ impl<'a> ExploreScene<'a> {
             background,
             message_list,
             skill_item_list_window,
+            current_explore_bgm: "field-0".into(),
         }
     }
 
@@ -128,133 +130,180 @@ impl<'a> ExploreScene<'a> {
     #[async_recursion(?Send)]
     async fn process_event(
         &mut self,
+        rng: &mut ThreadRng,
         player_state: &mut PlayerState,
         save_data: &mut save_data::SaveData,
         player_data: &PlayerData,
         item_data: &Vec<ItemData>,
+        level_item: &LevelItem,
     ) {
-        loop {
-            self.message_list.add_normal_message("message1").await;
-            self.wait_move_forward(player_state, player_data, item_data, save_data)
-                .await;
-            self.message_list.add_normal_message("message1").await;
-            self.wait_move_forward(player_state, player_data, item_data, save_data)
-                .await;
+        match level_item {
+            LevelItem::Sequence { items } => {
+                for level_item in items.iter() {
+                    self.process_event(
+                        rng,
+                        player_state,
+                        save_data,
+                        player_data,
+                        item_data,
+                        level_item,
+                    )
+                    .await;
+                }
+            }
+            LevelItem::Random { branches } => {
+                let dist = WeightedIndex::new(branches.iter().map(|b| b.weight)).unwrap();
+                let index = dist.sample(rng);
 
-            let skills = player_data.skills.iter().map(|s| s.id).collect::<Vec<_>>();
-            self.wait_add_skill(&skills, player_state, player_data)
+                trace!("Random level index: {}", index);
+
+                let level_item = &branches[index].item;
+                self.process_event(
+                    rng,
+                    player_state,
+                    save_data,
+                    player_data,
+                    item_data,
+                    level_item,
+                )
                 .await;
-            self.current_depth.increment();
-            self.message_list.add_space().await;
-            self.wait_move_forward(player_state, player_data, item_data, save_data)
+            }
+            LevelItem::Message {
+                text,
+                blue,
+                no_weight,
+            } => {
+                if blue.is_some() && blue.unwrap() {
+                    self.message_list.add_normal_blue_message(text).await;
+                } else {
+                    self.message_list.add_normal_message(text).await;
+                }
+                if !(no_weight.is_some() && no_weight.unwrap()) {
+                    self.wait_move_forward(player_state, player_data, item_data, save_data)
+                        .await;
+                }
+            }
+            LevelItem::Choice { text, branches } => {
+                let choices = &branches
+                    .iter()
+                    .map(|b| (b.text_lines, b.text.as_str()))
+                    .collect::<Vec<_>>();
+                let index = self
+                    .wait_choice(
+                        text,
+                        choices,
+                        player_state,
+                        player_data,
+                        item_data,
+                        save_data,
+                    )
+                    .await;
+
+                trace!("Choice level index: {}", index);
+
+                self.process_event(
+                    rng,
+                    player_state,
+                    save_data,
+                    player_data,
+                    item_data,
+                    &branches[index].item,
+                )
                 .await;
+            }
+            LevelItem::PlayBGM { bgm } => {
+                self.cx.play_bgm(bgm);
+                self.current_explore_bgm = bgm.to_string();
+            }
+            LevelItem::StopBGM => self.cx.stop_bgm(),
+            LevelItem::ResumeOrPlayBGM { bgm } => {
+                self.cx.resume_or_play_bgm(bgm);
+                self.current_explore_bgm = bgm.to_string();
+            }
+            LevelItem::ChangeToAfternoon => self.background.change_to_afternoon().await,
+            LevelItem::ChangeToNight => self.background.change_to_night().await,
+            LevelItem::Battle { id: _id } => {
+                self.cx.play_bgm("battle-0");
+                self.cover.start_battle().await;
+                input::wait_select_button(self.cx).await;
+                self.cx.resume_or_play_bgm(&self.current_explore_bgm);
+                self.cover.fade_in().await;
+            }
+            LevelItem::WaitOpenSkillItemList => {
+                self.wait_skill_item_list_window_open(
+                    player_state,
+                    player_data,
+                    item_data,
+                    save_data,
+                )
+                .await
+            }
+            LevelItem::GetSkill { skills, count } => {
+                let mut list = skills
+                    .iter()
+                    .flat_map(|sr| {
+                        let rarity = sr.rarity;
+                        let weight = sr.weight;
+                        player_data
+                            .skills
+                            .iter()
+                            .filter(move |s| s.rarity == rarity)
+                            .map(move |s| (s.id, s.rarity_weight * weight))
+                    })
+                    .filter(|(s, _)| !player_state.get_skills().contains(s))
+                    .collect::<Vec<_>>();
+                let mut candidate_skills = vec![];
+                for _ in 0..(list.len().min(*count as usize)) {
+                    let dist = WeightedIndex::new(list.iter().map(|(_, w)| w)).unwrap();
+                    let index = dist.sample(rng);
+                    let (skill_id, _) = list.remove(index);
+                    candidate_skills.push(skill_id);
+                }
+                self.wait_add_skill(&candidate_skills, player_state, player_data)
+                    .await;
+            }
+            LevelItem::AddItem { item_id, count } => {
+                for _ in 0..*count {
+                    player_state.add_item(*item_id);
+                }
+            }
         }
-
-        // let messages = [
-        //     "message1", "message2", "message3", "message4", "message5", "message6",
-        // ];
-        // for message in messages {
-        //     self.message_list.add_normal_message(message).await;
-        //     self.wait_move_forward(player_state, player_data, item_data, save_data)
-        //         .await;
-        //     self.current_depth.increment();
-        // }
-
-        // self.wait_move_forward(player_state, player_data, item_data, save_data)
-        //     .await;
-        // self.wait_add_skill(&[0, 1, 2, 3], player_state, player_data)
-        //     .await;
-
-        // self.message_list.add_normal_message("message").await;
-        // self.wait_move_forward(player_state, player_data, item_data, save_data)
-        //     .await;
-        // self.message_list
-        //     .add_normal_blue_message("explore-tutorial-x-key")
-        //     .await;
-        // self.wait_skill_item_list_window_open(player_state, player_data, item_data, save_data)
-        //     .await;
-
-        // player_state.add_item(0);
-        // player_state.add_item(0);
-        // player_state.add_item(0);
-        // player_state.add_item(0);
-        // player_state.add_item(1);
-        // player_state.add_item(2);
-        // player_state.add_item(3);
-        // player_state.add_item(4);
-        // player_state.add_skill(0, &player_data.skills);
-        // player_state.add_skill(1, &player_data.skills);
-        // player_state.add_skill(2, &player_data.skills);
-        // player_state.add_skill(3, &player_data.skills);
-
-        // self.message_list.add_normal_message("message").await;
-
-        // self.wait_move_forward(player_state, player_data, item_data, save_data)
-        //     .await;
-        // self.message_list
-        //     .add_normal_blue_message("explore-tutorial-x-key")
-        //     .await;
-        // self.wait_skill_item_list_window_open(player_state, player_data, item_data, save_data)
-        //     .await;
-
-        // self.wait_choice(
-        //     "message-choice",
-        //     &[
-        //         (2, "choice1"),
-        //         (1, "choice2"),
-        //         (3, "choice3"),
-        //         (1, "choice4"),
-        //     ],
-        //     player_state,
-        //     player_data,
-        //     item_data,
-        //     save_data,
-        // )
-        // .await;
-
-        // self.background.change_to_afternoon().await;
-        // let messages = [
-        //     "message1", "message2", "message3", "message4", "message5", "message6",
-        // ];
-        // for message in messages {
-        //     self.message_list.add_normal_message(message).await;
-        //     self.wait_move_forward(player_state, player_data, item_data, save_data)
-        //         .await;
-        //     self.current_depth.increment();
-        // }
-
-        // self.cx.play_bgm("battle-0");
-        // self.cover.start_battle().await;
-        // input::wait_select_button(self.cx).await;
-        // self.cx.stop_bgm();
-        // self.cover.fade_in().await;
-
-        // self.background.change_to_night().await;
-        // self.cx.play_bgm("field-1");
-        // let messages = [
-        //     "message1", "message2", "message3", "message4", "message5", "message6",
-        // ];
-        // for message in messages {
-        //     self.message_list.add_normal_message(message).await;
-        //     self.wait_move_forward(player_state, player_data, item_data, save_data)
-        //         .await;
-        //     self.current_depth.increment();
-        // }
     }
 
     pub(super) async fn start(&mut self, global_data: &mut game::GlobalData) -> anyhow::Result<()> {
+        let rng = &mut *global_data.rng.borrow_mut();
         let game_data = &global_data.game_data;
         let save_data = &mut global_data.save_data;
         let player_data = &game_data.player_data()[self.player_index];
         let item_data = game_data.item_data();
+        let level_data = game_data.level_data();
 
         let mut player_state = PlayerState::new();
+        let player_state = &mut player_state;
 
-        self.cx.play_bgm("field-0");
+        self.cx.play_bgm(&self.current_explore_bgm);
         self.cover.fade_in().await;
 
-        self.process_event(&mut player_state, save_data, player_data, item_data)
+        for LevelData {
+            item: level_item,
+            index,
+        } in level_data.iter()
+        {
+            info!("Level index: {}", index);
+
+            self.process_event(
+                rng,
+                player_state,
+                save_data,
+                player_data,
+                item_data,
+                level_item,
+            )
             .await;
+
+            self.current_depth.increment();
+            self.message_list.add_space().await;
+        }
 
         self.cover.fade_out().await;
         Ok(())
