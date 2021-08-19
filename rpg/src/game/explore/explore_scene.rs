@@ -6,11 +6,22 @@ use log::{info, trace};
 use rand::distributions::*;
 use rand::prelude::*;
 
+use crate::game::battle::*;
 use crate::game::explore::*;
 use crate::game::*;
 use crate::game_data::*;
 use crate::input;
 use crate::save_data;
+
+enum ProcessEventResult {
+    Playing,
+    GameOver,
+}
+
+pub enum ExploreResult {
+    GameClear,
+    GameOver,
+}
 
 pub(super) struct ExploreScene<'a> {
     cx: &'a AnimationEngineContext,
@@ -24,10 +35,10 @@ pub(super) struct ExploreScene<'a> {
     current_explore_bgm: String,
 }
 impl<'a> ExploreScene<'a> {
-    pub(super) fn new(cx: &'a AnimationEngineContext, player_index: usize, max_depth: u32) -> Self {
+    pub(super) fn new(cx: &'a AnimationEngineContext, player_index: usize) -> Self {
         let frame = WindowFrame::new(cx);
         let cover = Cover::new(cx);
-        let current_depth = CurrentDepth::new(cx, max_depth);
+        let current_depth = CurrentDepth::new(cx);
         let background = Background::new(cx);
         let message_list = MessageList::new(cx);
         let skill_item_list_window = SkillItemListWindow::new(cx);
@@ -136,19 +147,23 @@ impl<'a> ExploreScene<'a> {
         player_data: &PlayerData,
         item_data: &Vec<ItemData>,
         level_item: &LevelItem,
-    ) {
+    ) -> ProcessEventResult {
         match level_item {
             LevelItem::Sequence { items } => {
                 for level_item in items.iter() {
-                    self.process_event(
-                        rng,
-                        player_state,
-                        save_data,
-                        player_data,
-                        item_data,
-                        level_item,
-                    )
-                    .await;
+                    let result = self
+                        .process_event(
+                            rng,
+                            player_state,
+                            save_data,
+                            player_data,
+                            item_data,
+                            level_item,
+                        )
+                        .await;
+                    if let ProcessEventResult::GameOver = result {
+                        return ProcessEventResult::GameOver;
+                    }
                 }
             }
             LevelItem::Random { branches } => {
@@ -158,15 +173,16 @@ impl<'a> ExploreScene<'a> {
                 trace!("Random level index: {}", index);
 
                 let level_item = &branches[index].item;
-                self.process_event(
-                    rng,
-                    player_state,
-                    save_data,
-                    player_data,
-                    item_data,
-                    level_item,
-                )
-                .await;
+                return self
+                    .process_event(
+                        rng,
+                        player_state,
+                        save_data,
+                        player_data,
+                        item_data,
+                        level_item,
+                    )
+                    .await;
             }
             LevelItem::Message {
                 text,
@@ -201,15 +217,16 @@ impl<'a> ExploreScene<'a> {
 
                 trace!("Choice level index: {}", index);
 
-                self.process_event(
-                    rng,
-                    player_state,
-                    save_data,
-                    player_data,
-                    item_data,
-                    &branches[index].item,
-                )
-                .await;
+                return self
+                    .process_event(
+                        rng,
+                        player_state,
+                        save_data,
+                        player_data,
+                        item_data,
+                        &branches[index].item,
+                    )
+                    .await;
             }
             LevelItem::PlayBGM { bgm } => {
                 self.cx.play_bgm(bgm);
@@ -222,12 +239,28 @@ impl<'a> ExploreScene<'a> {
             }
             LevelItem::ChangeToAfternoon => self.background.change_to_afternoon().await,
             LevelItem::ChangeToNight => self.background.change_to_night().await,
-            LevelItem::Battle { id: _id } => {
-                self.cx.play_bgm("battle-0");
+            LevelItem::Battle { id, bgm } => {
+                self.cx.play_bgm(bgm);
                 self.cover.start_battle().await;
-                input::wait_select_button(self.cx).await;
-                self.cx.resume_or_play_bgm(&self.current_explore_bgm);
-                self.cover.fade_in().await;
+                let result = battle(
+                    self.cx,
+                    player_data,
+                    self.player_index,
+                    item_data,
+                    *id,
+                    player_state,
+                )
+                .await;
+                match result {
+                    BattleResult::Win => {
+                        self.cx.resume_or_play_bgm(&self.current_explore_bgm);
+                        self.cover.fade_in().await;
+                        return ProcessEventResult::Playing;
+                    }
+                    BattleResult::Lose => {
+                        return ProcessEventResult::GameOver;
+                    }
+                }
             }
             LevelItem::WaitOpenSkillItemList => {
                 self.wait_skill_item_list_window_open(
@@ -236,7 +269,7 @@ impl<'a> ExploreScene<'a> {
                     item_data,
                     save_data,
                 )
-                .await
+                .await;
             }
             LevelItem::GetSkill { skills, count } => {
                 let mut list = skills
@@ -259,6 +292,7 @@ impl<'a> ExploreScene<'a> {
                     let (skill_id, _) = list.remove(index);
                     candidate_skills.push(skill_id);
                 }
+                candidate_skills.sort();
                 self.wait_add_skill(&candidate_skills, player_state, player_data)
                     .await;
             }
@@ -268,9 +302,10 @@ impl<'a> ExploreScene<'a> {
                 }
             }
         }
+        ProcessEventResult::Playing
     }
 
-    pub(super) async fn start(&mut self, global_data: &mut game::GlobalData) -> anyhow::Result<()> {
+    pub(super) async fn start(&mut self, global_data: &mut game::GlobalData) -> ExploreResult {
         let rng = &mut *global_data.rng.borrow_mut();
         let game_data = &global_data.game_data;
         let save_data = &mut global_data.save_data;
@@ -281,31 +316,45 @@ impl<'a> ExploreScene<'a> {
         let mut player_state = PlayerState::new();
         let player_state = &mut player_state;
 
+        self.current_depth.set_max_depth(level_data.len());
         self.cx.play_bgm(&self.current_explore_bgm);
         self.cover.fade_in().await;
 
-        for LevelData {
-            item: level_item,
+        for (
             index,
-        } in level_data.iter()
+            LevelData {
+                item: level_item, ..
+            },
+        ) in level_data.iter().enumerate()
         {
-            info!("Level index: {}", index);
+            info!("Level index: {}", index + 1);
 
-            self.process_event(
-                rng,
-                player_state,
-                save_data,
-                player_data,
-                item_data,
-                level_item,
-            )
-            .await;
+            match self
+                .process_event(
+                    rng,
+                    player_state,
+                    save_data,
+                    player_data,
+                    item_data,
+                    level_item,
+                )
+                .await
+            {
+                ProcessEventResult::Playing => {
+                    if index + 1 == level_data.len() {
+                        self.cover.fade_out().await;
+                        return ExploreResult::GameClear;
+                    }
 
-            self.current_depth.increment();
-            self.message_list.add_space().await;
+                    self.current_depth.increment();
+                    self.message_list.add_space().await;
+                }
+                ProcessEventResult::GameOver => {
+                    return ExploreResult::GameOver;
+                }
+            }
         }
 
-        self.cover.fade_out().await;
-        Ok(())
+        unreachable!()
     }
 }

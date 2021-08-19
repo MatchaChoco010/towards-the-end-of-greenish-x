@@ -46,7 +46,8 @@ pub enum LevelItem {
     ChangeToAfternoon,
     ChangeToNight,
     Battle {
-        id: u32,
+        id: usize,
+        bgm: String,
     },
     WaitOpenSkillItemList,
     GetSkill {

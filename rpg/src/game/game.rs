@@ -58,13 +58,20 @@ async fn main(cx: AnimationEngineContext, mut global_data: GlobalData) {
     global_data.save_data.apply(&cx);
 
     loop {
-        if let title::TitleResult::Exit = title::title(&cx, &mut global_data).await {
-            break;
+        match title::title(&cx, &mut global_data).await {
+            title::TitleResult::Exit => break,
+            title::TitleResult::StartGame => {
+                let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
+                match explore::explore(&cx, &mut global_data, index).await {
+                    explore::ExploreResult::GameClear => {
+                        crate::input::wait_select_button(&cx).await;
+                    }
+                    explore::ExploreResult::GameOver => {
+                        crate::input::wait_select_button(&cx).await;
+                    }
+                }
+            }
         }
-        let opening::PlayerIndex(index) = opening::opening(&cx, &mut global_data).await;
-        // let index = 0;
-        explore::explore(&cx, &mut global_data, index).await;
-        crate::input::wait_select_button(&cx).await;
         next_frame().await;
     }
 }

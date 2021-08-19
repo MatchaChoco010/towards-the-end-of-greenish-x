@@ -8,6 +8,7 @@ item:
           text: level-6-text-1
       - Battle:
           id: 0
+          bgm: battle-0
       - Message:
           text: level-6-text-2
       - Message:

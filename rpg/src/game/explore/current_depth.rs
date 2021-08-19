@@ -7,7 +7,7 @@ pub(super) struct CurrentDepth<'a> {
     max_depth: u32,
 }
 impl<'a> CurrentDepth<'a> {
-    pub(super) fn new(cx: &'a AnimationEngineContext, max_depth: u32) -> Self {
+    pub(super) fn new(cx: &'a AnimationEngineContext) -> Self {
         let text = cx.add_text(AddTextInfo {
             key: "explore-depth".into(),
             font_size: 48.0,
@@ -19,7 +19,7 @@ impl<'a> CurrentDepth<'a> {
         let count_text = cx.add_text(AddTextInfo {
             key: "explore-current-depth".into(),
             font_size: 36.0,
-            format_args: vec!["  1".into(), format!("{}", max_depth)],
+            format_args: vec!["  1".into(), "1".into()],
             x: 70.0,
             y: 90.0,
             z: 20,
@@ -30,8 +30,18 @@ impl<'a> CurrentDepth<'a> {
             text,
             count_text,
             depth: 1,
-            max_depth,
+            max_depth: 1,
         }
+    }
+
+    pub(super) fn set_max_depth(&mut self, max_depth: usize) {
+        self.max_depth = max_depth as u32;
+        self.cx
+            .set_text_format_args(
+                self.count_text,
+                &[&format!("{:3}", self.depth), &format!("{}", self.max_depth)],
+            )
+            .unwrap();
     }
 
     pub(super) fn increment(&mut self) {

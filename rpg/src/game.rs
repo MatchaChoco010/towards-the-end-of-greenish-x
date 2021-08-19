@@ -1,3 +1,4 @@
+mod battle;
 mod explore;
 mod game;
 mod opening;

@@ -23,14 +23,13 @@ use message_list::*;
 use skill_item_list_window::*;
 use window_frame::*;
 
+pub use explore_scene::ExploreResult;
+
 pub async fn explore(
     cx: &AnimationEngineContext,
     global_data: &mut game::GlobalData,
     player_index: usize,
-) {
+) -> ExploreResult {
     info!("Enter Explore Scene!");
-    ExploreScene::new(cx, player_index, 150)
-        .start(global_data)
-        .await
-        .expect("Failed to play explore scene.")
+    ExploreScene::new(cx, player_index).start(global_data).await
 }
