@@ -1,0 +1,27 @@
+len: 120
+fps: 60
+data:
+  - - Rotation_rotation
+    - keys:
+        - frame: 61
+          value: 0.0
+        - frame: 120
+          value: -0.436332
+  - - UniformScale_scale
+    - keys:
+        - frame: 61
+          value: 0.5
+        - frame: 120
+          value: 1.1
+  - - Position_x
+    - keys:
+        - frame: 61
+          value: 0.0
+        - frame: 120
+          value: -1120.0
+  - - Position_y
+    - keys:
+        - frame: 61
+          value: 0.0
+        - frame: 120
+          value: 100.0

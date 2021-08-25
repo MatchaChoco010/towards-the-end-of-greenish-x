@@ -19,6 +19,13 @@ pub struct SkillRarityWeight {
     pub rarity: u8,
 }
 
+#[derive(Deserialize, Clone, Copy)]
+pub enum BattleTime {
+    Morning,
+    Afternoon,
+    Night,
+}
+
 #[derive(Deserialize)]
 pub enum LevelItem {
     Sequence {
@@ -48,6 +55,7 @@ pub enum LevelItem {
     Battle {
         id: usize,
         bgm: String,
+        time: BattleTime,
     },
     WaitOpenSkillItemList,
     GetSkill {

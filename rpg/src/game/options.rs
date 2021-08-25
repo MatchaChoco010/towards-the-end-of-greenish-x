@@ -30,7 +30,7 @@ impl<'a> Options<'a> {
         let bg_cover = cx.add_rect(AddRectInfo {
             width: 1280.0,
             height: 720.0,
-            z: 400,
+            z: 700,
             r: 0.0,
             g: 0.0,
             b: 0.0,
@@ -41,35 +41,35 @@ impl<'a> Options<'a> {
             name: "/image/ui/menu-bg.png".into(),
             x: -25.0,
             y: 0.0,
-            z: 405,
+            z: 705,
             ..Default::default()
         });
         let cursor = cx.add_image(AddImageInfo {
             name: "/image/ui/options-part-1.png".into(),
             x: 200.0,
             y: 150.0,
-            z: 405,
+            z: 705,
             ..Default::default()
         });
         let arrow_bgm = cx.add_image(AddImageInfo {
             name: "/image/ui/options-part-3.png".into(),
             x: 550.0,
             y: 170.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let arrow_sfx = cx.add_image(AddImageInfo {
             name: "/image/ui/options-part-3.png".into(),
             x: 550.0 - 0.17632698 * 130.0,
             y: 300.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let arrow_lang = cx.add_image(AddImageInfo {
             name: "/image/ui/options-part-2.png".into(),
             x: 550.0 - 0.17632698 * 130.0 * 2.0,
             y: 430.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_title = cx.add_text(AddTextInfo {
@@ -77,7 +77,7 @@ impl<'a> Options<'a> {
             font_size: 72.0,
             x: 550.0,
             y: 30.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_bgm_title = cx.add_text(AddTextInfo {
@@ -85,7 +85,7 @@ impl<'a> Options<'a> {
             font_size: 56.0,
             x: 250.0,
             y: 165.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_bgm_value = cx.add_text(AddTextInfo {
@@ -93,7 +93,7 @@ impl<'a> Options<'a> {
             font_size: 56.0,
             x: 630.0,
             y: 165.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_sfx_title = cx.add_text(AddTextInfo {
@@ -101,7 +101,7 @@ impl<'a> Options<'a> {
             font_size: 56.0,
             x: 250.0 - 0.17632698 * 130.0,
             y: 295.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_sfx_value = cx.add_text(AddTextInfo {
@@ -109,7 +109,7 @@ impl<'a> Options<'a> {
             font_size: 56.0,
             x: 630.0 - 0.17632698 * 130.0,
             y: 295.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_lang_title = cx.add_text(AddTextInfo {
@@ -117,7 +117,7 @@ impl<'a> Options<'a> {
             font_size: 56.0,
             x: 250.0 - 0.17632698 * 130.0 * 2.0,
             y: 425.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_lang_value = cx.add_text(AddTextInfo {
@@ -125,7 +125,7 @@ impl<'a> Options<'a> {
             font_size: 36.0,
             x: 555.0,
             y: 435.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         let text_close = cx.add_text(AddTextInfo {
@@ -133,7 +133,7 @@ impl<'a> Options<'a> {
             font_size: 56.0,
             x: 500.0,
             y: 555.0,
-            z: 410,
+            z: 710,
             ..Default::default()
         });
         Self {
@@ -274,22 +274,22 @@ impl<'a> Options<'a> {
             match index {
                 0 => {
                     self.cx
-                        .set_position(self.cursor, 200.0, 150.0, 405)
+                        .set_position(self.cursor, 200.0, 150.0, 705)
                         .unwrap();
                 }
                 1 => {
                     self.cx
-                        .set_position(self.cursor, 200.0 - 0.17632698 * 130.0, 280.0, 405)
+                        .set_position(self.cursor, 200.0 - 0.17632698 * 130.0, 280.0, 705)
                         .unwrap();
                 }
                 2 => {
                     self.cx
-                        .set_position(self.cursor, 200.0 - 0.17632698 * 130.0 * 2.0, 410.0, 405)
+                        .set_position(self.cursor, 200.0 - 0.17632698 * 130.0 * 2.0, 410.0, 705)
                         .unwrap();
                 }
                 3 => {
                     self.cx
-                        .set_position(self.cursor, 200.0 - 0.17632698 * 130.0 * 3.0, 540.0, 405)
+                        .set_position(self.cursor, 200.0 - 0.17632698 * 130.0 * 3.0, 540.0, 705)
                         .unwrap();
                 }
                 _ => unreachable!(),

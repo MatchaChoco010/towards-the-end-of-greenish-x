@@ -239,7 +239,7 @@ impl<'a> ExploreScene<'a> {
             }
             LevelItem::ChangeToAfternoon => self.background.change_to_afternoon().await,
             LevelItem::ChangeToNight => self.background.change_to_night().await,
-            LevelItem::Battle { id, bgm } => {
+            LevelItem::Battle { id, bgm, time } => {
                 self.cx.play_bgm(bgm);
                 self.cover.start_battle().await;
                 let result = battle(
@@ -249,6 +249,7 @@ impl<'a> ExploreScene<'a> {
                     item_data,
                     *id,
                     player_state,
+                    *time,
                 )
                 .await;
                 match result {

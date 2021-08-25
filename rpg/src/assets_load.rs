@@ -73,6 +73,22 @@ fn load_image(engine: &mut AnimationEngine) -> anyhow::Result<()> {
         engine.load_image(&name, &path)?;
     }
 
+    for path in engine.filesystem().read_dir("/image/monster/")? {
+        let name = path.to_string_lossy();
+
+        trace!("[load image] name: {}, path: {:?}", name, path);
+
+        engine.load_image(&name, &path)?;
+    }
+
+    for path in engine.filesystem().read_dir("/image/number/")? {
+        let name = path.to_string_lossy();
+
+        trace!("[load image] name: {}, path: {:?}", name, path);
+
+        engine.load_image(&name, &path)?;
+    }
+
     info!("Finish loading images!");
 
     Ok(())
@@ -114,6 +130,14 @@ fn load_animation(engine: &mut AnimationEngine) -> anyhow::Result<()> {
     }
 
     for path in engine.filesystem().read_dir("/animation/explore/")? {
+        let name = path.to_string_lossy();
+
+        trace!("[load animation] name: {}, path: {:?}", name, path);
+
+        engine.load_animation_yaml(&name, &path)?;
+    }
+
+    for path in engine.filesystem().read_dir("/animation/battle/")? {
         let name = path.to_string_lossy();
 
         trace!("[load animation] name: {}, path: {:?}", name, path);
