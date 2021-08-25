@@ -1,0 +1,9 @@
+len: 120
+fps: 60
+data:
+  - - Position_y
+    - keys:
+        - frame: 61
+          value: -220.0
+        - frame: 90
+          value: 0.0

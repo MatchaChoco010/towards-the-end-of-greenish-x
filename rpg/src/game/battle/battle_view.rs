@@ -3,7 +3,7 @@ use futures::{join, select, FutureExt};
 
 use crate::game::battle::background_view::*;
 use crate::game::battle::cover_view::*;
-use crate::game::game;
+use crate::game::battle::message_window_view::MessageWindowView;
 use crate::game_data;
 
 pub(super) struct SkillViewItem {
@@ -31,15 +31,18 @@ pub(super) struct BattleView<'a> {
     cx: &'a AnimationEngineContext,
     background: BackgroundView<'a>,
     cover: CoverView<'a>,
+    message_window: MessageWindowView<'a>,
 }
 impl<'a> BattleView<'a> {
     pub(super) fn new(cx: &'a AnimationEngineContext, time: game_data::BattleTime) -> Self {
         let background = BackgroundView::new(cx, time);
         let cover = CoverView::new(cx);
+        let message_window = MessageWindowView::new(cx);
         Self {
             cx,
             background,
             cover,
+            message_window,
         }
     }
 
@@ -51,7 +54,11 @@ impl<'a> BattleView<'a> {
     }
 
     pub(crate) async fn battle_start(&self) {
-        join!(self.cover.start_battle(), self.background.start());
+        join!(
+            self.background.start(),
+            self.cover.start_battle(),
+            self.message_window.start_battle()
+        );
     }
     pub(crate) async fn battle_end(&self) {
         self.cover.fade_out().await;
@@ -66,9 +73,15 @@ impl<'a> BattleView<'a> {
 
     pub(crate) async fn enemy_down_animation(&self, anim_key: impl ToString) {}
 
-    pub(crate) async fn set_message(&self, message_key: impl ToString, message_args: &[&str]) {}
+    pub(crate) async fn set_message(&self, message_key: impl ToString, message_args: &[&str]) {
+        self.message_window
+            .add_message(message_key, message_args)
+            .await;
+    }
 
-    pub(crate) fn set_turn_number(&self, turn: u32) {}
+    pub(crate) fn set_turn_number(&self, turn: u32) {
+        self.message_window.set_turns(turn);
+    }
 
     pub(super) async fn enemy_blink_animation(&self) {}
     pub(super) async fn enemy_blink_animation_loop(&self) {}

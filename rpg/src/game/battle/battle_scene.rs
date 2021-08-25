@@ -42,8 +42,19 @@ impl<'a> BattleScene<'a> {
             "/image/monster/monster.png",
             "/image/monster/monster-shadow.png",
         );
+
         self.view.battle_start().await;
 
+        self.view.set_turn_number(1);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
+        input::wait_select_button(self.cx).await;
+
+        self.view.set_turn_number(2);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
         input::wait_select_button(self.cx).await;
 
         self.view.battle_end().await;
