@@ -1,4 +1,6 @@
+use animation_engine::executor::next_frame;
 use animation_engine::*;
+use futures::{join, select, FutureExt};
 
 use crate::game;
 use crate::game::battle::battle_view::*;
@@ -27,7 +29,7 @@ impl<'a> BattleScene<'a> {
         battle_id: usize,
         time: game_data::BattleTime,
     ) -> Self {
-        let view = BattleView::new(cx, time);
+        let view = BattleView::new(cx, time, player_index);
         Self {
             cx,
             player_data,
@@ -42,6 +44,8 @@ impl<'a> BattleScene<'a> {
             "/image/monster/monster.png",
             "/image/monster/monster-shadow.png",
         );
+        self.view.set_player_hp(150, 150);
+        self.view.set_player_tp(50, 50);
 
         self.view.battle_start().await;
 
@@ -50,11 +54,80 @@ impl<'a> BattleScene<'a> {
             .set_message("battle-message-battle-start", &["森林チョウ"])
             .await;
         input::wait_select_button(self.cx).await;
+        self.view.player_blink_animation().await;
 
         self.view.set_turn_number(2);
         self.view
             .set_message("battle-message-battle-start", &["森林チョウ"])
             .await;
+        input::wait_select_button(self.cx).await;
+        self.view.player_blink_animation().await;
+        input::wait_select_button(self.cx).await;
+        self.view.set_player_hp(140, 150);
+        self.view.set_player_tp(50, 50);
+        self.view.player_damage_animation(10);
+        input::wait_select_button(self.cx).await;
+
+        self.view.set_turn_number(3);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
+        input::wait_select_button(self.cx).await;
+        self.view.player_blink_animation().await;
+        input::wait_select_button(self.cx).await;
+        self.view.set_player_hp(140, 150);
+        self.view.set_player_tp(30, 50);
+        input::wait_select_button(self.cx).await;
+
+        self.view.set_turn_number(4);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
+        input::wait_select_button(self.cx).await;
+        self.view.player_blink_animation().await;
+        input::wait_select_button(self.cx).await;
+        self.view.set_player_hp(70, 150);
+        self.view.set_player_tp(30, 50);
+        self.view.player_damage_animation(70);
+        input::wait_select_button(self.cx).await;
+
+        self.view.set_turn_number(5);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
+        input::wait_select_button(self.cx).await;
+        next_frame().await;
+        select! {
+            _ = self.view.player_blink_animation_loop().fuse() => unreachable!(),
+            _ = input::wait_select_button(self.cx).fuse() => (),
+        }
+        self.view.set_player_hp(90, 150);
+        self.view.set_player_tp(30, 50);
+        self.view.player_heal_animation(20);
+        input::wait_select_button(self.cx).await;
+
+        self.view.set_turn_number(6);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
+        input::wait_select_button(self.cx).await;
+        self.view.player_blink_animation().await;
+        input::wait_select_button(self.cx).await;
+        self.view.set_player_hp(10, 150);
+        self.view.set_player_tp(7, 50);
+        self.view.player_damage_animation(80);
+        input::wait_select_button(self.cx).await;
+
+        self.view.set_turn_number(7);
+        self.view
+            .set_message("battle-message-battle-start", &["森林チョウ"])
+            .await;
+        input::wait_select_button(self.cx).await;
+        self.view.player_blink_animation().await;
+        input::wait_select_button(self.cx).await;
+        self.view.set_player_hp(0, 150);
+        self.view.set_player_tp(2, 50);
+        self.view.player_damage_animation(36724);
         input::wait_select_button(self.cx).await;
 
         self.view.battle_end().await;

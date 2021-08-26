@@ -1,9 +1,11 @@
+use animation_engine::executor::next_frame;
 use animation_engine::*;
 use futures::{join, select, FutureExt};
 
 use crate::game::battle::background_view::*;
 use crate::game::battle::cover_view::*;
-use crate::game::battle::message_window_view::MessageWindowView;
+use crate::game::battle::message_window_view::*;
+use crate::game::battle::player_view::*;
 use crate::game_data;
 
 pub(super) struct SkillViewItem {
@@ -32,103 +34,124 @@ pub(super) struct BattleView<'a> {
     background: BackgroundView<'a>,
     cover: CoverView<'a>,
     message_window: MessageWindowView<'a>,
+    player: PlayerView<'a>,
 }
 impl<'a> BattleView<'a> {
-    pub(super) fn new(cx: &'a AnimationEngineContext, time: game_data::BattleTime) -> Self {
+    pub(super) fn new(
+        cx: &'a AnimationEngineContext,
+        time: game_data::BattleTime,
+        player_index: usize,
+    ) -> Self {
         let background = BackgroundView::new(cx, time);
         let cover = CoverView::new(cx);
         let message_window = MessageWindowView::new(cx);
+        let player = PlayerView::new(cx, player_index);
         Self {
             cx,
             background,
             cover,
             message_window,
+            player,
         }
     }
 
-    pub(crate) fn set_monster_image(
+    pub(super) fn set_monster_image(
         &self,
         image_key: impl ToString,
         image_shadow_key: impl ToString,
     ) {
     }
 
-    pub(crate) async fn battle_start(&self) {
+    pub(super) async fn battle_start(&self) {
         join!(
             self.background.start(),
             self.cover.start_battle(),
-            self.message_window.start_battle()
+            self.message_window.start_battle(),
+            self.player.start_battle(),
         );
     }
-    pub(crate) async fn battle_end(&self) {
+    pub(super) async fn battle_end(&self) {
         self.cover.fade_out().await;
     }
 
-    pub(crate) fn set_enemy_hp(&self, hp: i32, max_hp: i32) {}
-    pub(crate) fn set_player_hp(&self, hp: i32, max_hp: i32) {}
-    pub(crate) fn set_player_tp(&self, tp: i32, max_tp: i32) {}
+    pub(super) fn set_enemy_hp(&self, hp: i32, max_hp: i32) {}
+    pub(super) fn set_player_hp(&self, hp: i32, max_hp: i32) {
+        self.player.set_hp(hp, max_hp);
+    }
+    pub(super) fn set_player_tp(&self, tp: i32, max_tp: i32) {
+        self.player.set_tp(tp, max_tp);
+    }
 
-    pub(crate) async fn enemy_damage_animation(&self, damage: i32, anim_key: impl ToString) {}
-    pub(crate) async fn player_damage_animation(&self, damage: i32) {}
+    pub(super) async fn enemy_damage_animation(&self, damage: i32, anim_key: impl ToString) {}
+    pub(super) fn player_damage_animation(&self, damage: i32) {
+        self.player.damage_animation(damage);
+    }
+    pub(super) fn player_heal_animation(&self, heal: i32) {
+        self.player.heal_animation(heal);
+    }
 
-    pub(crate) async fn enemy_down_animation(&self, anim_key: impl ToString) {}
+    pub(super) async fn enemy_down_animation(&self, anim_key: impl ToString) {}
 
-    pub(crate) async fn set_message(&self, message_key: impl ToString, message_args: &[&str]) {
+    pub(super) async fn set_message(&self, message_key: impl ToString, message_args: &[&str]) {
         self.message_window
             .add_message(message_key, message_args)
             .await;
     }
 
-    pub(crate) fn set_turn_number(&self, turn: u32) {
+    pub(super) fn set_turn_number(&self, turn: u32) {
         self.message_window.set_turns(turn);
     }
 
     pub(super) async fn enemy_blink_animation(&self) {}
     pub(super) async fn enemy_blink_animation_loop(&self) {}
-    pub(super) async fn player_blink_animation(&self) {}
-    pub(super) async fn player_blink_animation_loop(&self) {}
+    pub(super) async fn player_blink_animation(&self) {
+        self.player.blink_animation().await;
+    }
+    pub(super) async fn player_blink_animation_loop(&self) {
+        self.player.blink_animation_loop().await;
+    }
 
-    pub(crate) fn set_menu_cursor(&self, index: usize) {}
-    pub(crate) async fn show_menu(&self) {}
-    pub(crate) async fn hide_menu(&self) {}
+    pub(super) fn set_menu_cursor(&self, index: usize) {}
+    pub(super) async fn show_menu(&self) {}
+    pub(super) async fn hide_menu(&self) {}
 
-    pub(crate) fn set_skills(
+    pub(super) fn set_skills(
         &mut self,
         skills: &[SkillViewItem],
         top_index: usize,
         cursor_index: usize,
     ) {
     }
-    pub(crate) async fn show_skills(&self) {}
-    pub(crate) async fn hide_skills(&self) {}
+    pub(super) async fn show_skills(&self) {}
+    pub(super) async fn hide_skills(&self) {}
 
-    pub(crate) fn set_items(
+    pub(super) fn set_items(
         &mut self,
         items: &[ItemViewItem],
         top_index: usize,
         cursor_index: usize,
     ) {
     }
-    pub(crate) async fn show_items(&self) {}
-    pub(crate) async fn hide_items(&self) {}
+    pub(super) async fn show_items(&self) {}
+    pub(super) async fn hide_items(&self) {}
 
-    pub(crate) fn set_player_info(
+    pub(super) fn set_player_info(
         &mut self,
         player_modifiers: &Vec<PlayerModifierViewItem>,
         top_index: usize,
         cursor_index: usize,
     ) {
     }
-    pub(crate) async fn show_player_info(&self) {}
-    pub(crate) async fn hide_player_info(&self) {}
+    pub(super) async fn show_player_info(&self) {}
+    pub(super) async fn hide_player_info(&self) {}
 
-    pub(crate) fn set_enemy_info(
+    pub(super) fn set_enemy_info(
         &mut self,
         enemy_modifiers: &Vec<EnemyModifierViewItem>,
         top_index: usize,
         cursor_index: usize,
     ) {
     }
-    pub(crate) async fn show_enemy_info(&self) {}
-    pub(crate) async fn hide_enemy_info(&self) {}
+    pub(super) async fn show_enemy_info(&self) {}
+    pub(super) async fn hide_enemy_info(&self) {}
 }

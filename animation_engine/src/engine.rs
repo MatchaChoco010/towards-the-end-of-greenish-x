@@ -292,6 +292,18 @@ impl AnimationEngineContext {
         Ok(())
     }
 
+    pub fn set_color(&self, entity: Entity, r: f32, g: f32, b: f32) -> anyhow::Result<()> {
+        let mut this = self.get_mut();
+        let mut entry = this.world.entry_mut(entity)?;
+        let color = entry
+            .get_component_mut::<Color>()
+            .expect(&format!("Entity {:?} has no color component", entity));
+        color.r = r;
+        color.g = g;
+        color.b = b;
+        Ok(())
+    }
+
     pub fn set_text_key(&self, entity: Entity, new_key: impl ToString) -> anyhow::Result<()> {
         let mut this = self.get_mut();
         let mut entry = this.world.entry_mut(entity)?;

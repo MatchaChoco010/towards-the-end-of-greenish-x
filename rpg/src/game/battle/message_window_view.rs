@@ -73,11 +73,11 @@ impl<'a> MessageWindowView<'a> {
             .expect("animation not found");
         self.cx.set_text_key(self.text, key).unwrap();
         self.cx.set_text_format_args(self.text, args).unwrap();
-        self.cx.play_sfx("/audio/sfx/cursor.ogg");
         self.cx
             .play_animation(self.text, "/animation/battle/message-fade-in.yml")
             .await
             .expect("animation not found");
+        self.cx.play_sfx("/audio/sfx/cursor.ogg");
     }
 
     pub(super) fn set_turns(&self, turns: u32) {

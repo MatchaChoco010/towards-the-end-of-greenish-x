@@ -8,7 +8,10 @@ mod background_view;
 mod battle_scene;
 mod battle_view;
 mod cover_view;
+mod damage_number_view;
 mod message_window_view;
+mod number_view;
+mod player_view;
 
 pub use battle_scene::*;
 

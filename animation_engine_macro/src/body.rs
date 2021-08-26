@@ -672,11 +672,10 @@ pub fn anim_components(input: TokenStream) -> TokenStream {
                             if frame >= self.len {
                                 if !self.is_finished {
                                     self.is_finished = true;
-                                    self.finish_sender
+                                    let _ = self.finish_sender
                                         .lock()
                                         .unwrap()
-                                        .send(AnimationFinishSignal)
-                                        .unwrap();
+                                        .send(AnimationFinishSignal);
                                     EntityAnimationUpdateStatus::JustFinish
                                 } else {
                                     EntityAnimationUpdateStatus::Finished
