@@ -3,7 +3,7 @@ fps: 60
 data:
   - - Position_y
     - keys:
-        - frame: 30
+        - frame: 0
           value: 720.0
         - frame: 60
-          value: -330.0
+          value: -780.0

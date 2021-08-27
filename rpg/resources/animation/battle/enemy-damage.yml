@@ -1,0 +1,21 @@
+len: 20
+fps: 60
+data:
+  - - Position_x
+    - keys:
+        - frame: 1
+          value: 235.0
+        - frame: 5
+          value: 255.0
+        - frame: 10
+          value: 215.0
+        - frame: 20
+          value: 235.0
+  - - Position_y
+    - keys:
+        - frame: 1
+          value: 140.0
+        - frame: 15
+          value: 160.0
+        - frame: 20
+          value: 140.0

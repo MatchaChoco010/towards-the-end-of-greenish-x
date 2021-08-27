@@ -1,0 +1,11 @@
+len: 10
+fps: 60
+data:
+  - - Position_x
+    - keys:
+        - frame: 1
+          value: 716.0
+        - frame: 5
+          value: 726.0
+        - frame: 10
+          value: 716.0

@@ -75,11 +75,11 @@ impl<'a> Cover<'a> {
             self.cx
                 .play_animation(self.cover, "/animation/explore/cover-battle-start.yml"),
             self.cx
-                .play_animation(self.part_26, "/animation/explore/cover-battle-start-1.yml"),
+                .play_animation(self.part_24, "/animation/explore/cover-battle-start-1.yml"),
             self.cx
                 .play_animation(self.part_25, "/animation/explore/cover-battle-start-2.yml"),
             self.cx
-                .play_animation(self.part_24, "/animation/explore/cover-battle-start-3.yml"),
+                .play_animation(self.part_26, "/animation/explore/cover-battle-start-3.yml"),
         )
         .expect("animation not found");
     }

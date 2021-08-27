@@ -1,8 +1,8 @@
 use animation_engine::executor::*;
 use animation_engine::*;
-use futures::try_join;
+use futures::{join, try_join};
 
-use crate::game::battle::damage_number_view::DamageNumberView;
+use crate::game::battle::damage_number_view::*;
 
 pub(super) struct PlayerView<'a> {
     cx: &'a AnimationEngineContext,
@@ -158,10 +158,20 @@ impl<'a> PlayerView<'a> {
 
     pub(super) fn damage_animation(&self, damage: i32) {
         let cx = self.cx.clone();
+        let player_image = self.player_image;
+        let player_shadow_image = self.player_shadow_image;
         spawn(async move {
-            DamageNumberView::new_damage(&cx, damage, 1160.0, 570.0, 495)
-                .start_animation("/animation/battle/player-damage-number-animation.yml")
-                .await;
+            let damage = DamageNumberView::new_damage(&cx, damage, 1160.0, 570.0, 495);
+            let result = join!(
+                cx.play_animation(player_image, "/animation/battle/player-image-damage.yml"),
+                cx.play_animation(
+                    player_shadow_image,
+                    "/animation/battle/player-shadow-image-damage.yml"
+                ),
+                damage.start_animation("/animation/battle/player-damage-number-animation.yml"),
+            );
+            result.0.expect("animation not found");
+            result.1.expect("animation not found");
         });
     }
 

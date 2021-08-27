@@ -1,9 +1,9 @@
-use animation_engine::executor::next_frame;
 use animation_engine::*;
 use futures::{join, select, FutureExt};
 
 use crate::game::battle::background_view::*;
 use crate::game::battle::cover_view::*;
+use crate::game::battle::enemy_view::*;
 use crate::game::battle::message_window_view::*;
 use crate::game::battle::player_view::*;
 use crate::game_data;
@@ -35,6 +35,7 @@ pub(super) struct BattleView<'a> {
     cover: CoverView<'a>,
     message_window: MessageWindowView<'a>,
     player: PlayerView<'a>,
+    enemy: EnemyView<'a>,
 }
 impl<'a> BattleView<'a> {
     pub(super) fn new(
@@ -46,12 +47,14 @@ impl<'a> BattleView<'a> {
         let cover = CoverView::new(cx);
         let message_window = MessageWindowView::new(cx);
         let player = PlayerView::new(cx, player_index);
+        let enemy = EnemyView::new(cx);
         Self {
             cx,
             background,
             cover,
             message_window,
             player,
+            enemy,
         }
     }
 
@@ -60,6 +63,7 @@ impl<'a> BattleView<'a> {
         image_key: impl ToString,
         image_shadow_key: impl ToString,
     ) {
+        self.enemy.set_monster_image(image_key, image_shadow_key);
     }
 
     pub(super) async fn battle_start(&self) {
@@ -68,13 +72,16 @@ impl<'a> BattleView<'a> {
             self.cover.start_battle(),
             self.message_window.start_battle(),
             self.player.start_battle(),
+            self.enemy.start_battle(),
         );
     }
     pub(super) async fn battle_end(&self) {
         self.cover.fade_out().await;
     }
 
-    pub(super) fn set_enemy_hp(&self, hp: i32, max_hp: i32) {}
+    pub(super) fn set_enemy_hp(&self, hp: i32, max_hp: i32) {
+        self.enemy.set_hp(hp, max_hp);
+    }
     pub(super) fn set_player_hp(&self, hp: i32, max_hp: i32) {
         self.player.set_hp(hp, max_hp);
     }
@@ -82,7 +89,15 @@ impl<'a> BattleView<'a> {
         self.player.set_tp(tp, max_tp);
     }
 
-    pub(super) async fn enemy_damage_animation(&self, damage: i32, anim_key: impl ToString) {}
+    // pub(super) async fn enemy_boss_damage_animation(&self, damage: i32) {
+    //     self.enemy.damage_animation(damage);
+    // }
+    pub(super) async fn enemy_damage_animation(&self, damage: i32) {
+        self.enemy.damage_animation(damage);
+    }
+    pub(super) async fn enemy_heal_animation(&self, heal: i32) {
+        self.enemy.heal_animation(heal);
+    }
     pub(super) fn player_damage_animation(&self, damage: i32) {
         self.player.damage_animation(damage);
     }
@@ -90,7 +105,12 @@ impl<'a> BattleView<'a> {
         self.player.heal_animation(heal);
     }
 
-    pub(super) async fn enemy_down_animation(&self, anim_key: impl ToString) {}
+    pub(super) async fn enemy_down_animation(&self) {
+        self.enemy.down_enemy().await;
+    }
+    // pub(super) async fn enemy_boss_down_animation(&self) {
+    //     self.enemy.down_enemy().await;
+    // }
 
     pub(super) async fn set_message(&self, message_key: impl ToString, message_args: &[&str]) {
         self.message_window
@@ -102,8 +122,15 @@ impl<'a> BattleView<'a> {
         self.message_window.set_turns(turn);
     }
 
-    pub(super) async fn enemy_blink_animation(&self) {}
-    pub(super) async fn enemy_blink_animation_loop(&self) {}
+    pub(super) async fn enemy_blink_animation(&self) {
+        self.enemy.blink_animation().await;
+    }
+    pub(super) async fn enemy_blink_animation_loop(&self) {
+        self.enemy.blink_animation_loop().await;
+    }
+    pub(super) fn reset_enemy_blink(&self) {
+        self.enemy.reset_blink();
+    }
     pub(super) async fn player_blink_animation(&self) {
         self.player.blink_animation().await;
     }

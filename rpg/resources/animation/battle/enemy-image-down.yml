@@ -5,9 +5,11 @@ data:
     - keys:
         - frame: 1
           value: 1.0
-  - - Position_y
-    - keys:
-        - frame: 0
-          value: 1181.0
         - frame: 60
           value: 0.0
+  - - Position_y
+    - keys:
+        - frame: 1
+          value: 140.0
+        - frame: 60
+          value: 180.0

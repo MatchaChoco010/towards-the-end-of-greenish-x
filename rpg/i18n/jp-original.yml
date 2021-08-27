@@ -264,6 +264,18 @@ texts:
   battle-tp-text: '{}/{}'
   battle-message-battle-start: |-
     {}が襲いかかってきた！
+  battle-message-turn-start: |-
+    あなたの行動を選んでください
+  battle-message-player-damage: |-
+    {}のダメージを受けた！
+  battle-message-player-heal: |-
+    HPを{}回復した！
+  battle-message-enemy-damage: |-
+    {}に{}のダメージを与えた！
+  battle-message-enemy-heal: |-
+    {}はHPを{}回復した！
+  battle-message-enemy-down: |-
+    {}を倒した！
 
   player-0-skill-name-0: 毒マスタリ
   player-0-skill-name-0-level-1: 毒マスタリ Lv1
