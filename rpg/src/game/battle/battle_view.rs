@@ -4,6 +4,7 @@ use futures::{join, select, FutureExt};
 use crate::game::battle::background_view::*;
 use crate::game::battle::cover_view::*;
 use crate::game::battle::enemy_view::*;
+use crate::game::battle::menu_view::*;
 use crate::game::battle::message_window_view::*;
 use crate::game::battle::player_view::*;
 use crate::game_data;
@@ -36,6 +37,7 @@ pub(super) struct BattleView<'a> {
     message_window: MessageWindowView<'a>,
     player: PlayerView<'a>,
     enemy: EnemyView<'a>,
+    menu: MenuView<'a>,
 }
 impl<'a> BattleView<'a> {
     pub(super) fn new(
@@ -48,6 +50,7 @@ impl<'a> BattleView<'a> {
         let message_window = MessageWindowView::new(cx);
         let player = PlayerView::new(cx, player_index);
         let enemy = EnemyView::new(cx);
+        let menu = MenuView::new(cx);
         Self {
             cx,
             background,
@@ -55,6 +58,7 @@ impl<'a> BattleView<'a> {
             message_window,
             player,
             enemy,
+            menu,
         }
     }
 
@@ -137,10 +141,22 @@ impl<'a> BattleView<'a> {
     pub(super) async fn player_blink_animation_loop(&self) {
         self.player.blink_animation_loop().await;
     }
+    pub(super) fn reset_player_blink(&self) {
+        self.player.reset_blink();
+    }
 
-    pub(super) fn set_menu_cursor(&self, index: usize) {}
-    pub(super) async fn show_menu(&self) {}
-    pub(super) async fn hide_menu(&self) {}
+    pub(super) fn set_menu_active(&self, active: bool) {
+        self.menu.set_active(active);
+    }
+    pub(super) fn set_menu_cursor(&self, index: usize) {
+        self.menu.set_cursor(index);
+    }
+    pub(super) async fn show_menu(&self) {
+        self.menu.show().await;
+    }
+    pub(super) async fn hide_menu(&self) {
+        self.menu.hide().await;
+    }
 
     pub(super) fn set_skills(
         &mut self,

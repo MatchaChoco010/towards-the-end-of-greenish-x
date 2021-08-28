@@ -257,11 +257,16 @@ texts:
     （Xキーでスキル・アイテムウィンドウを開きます。
      所持しているスキルとアイテムの確認が行なえます)
 
-  battle-message-turns: Turn {}
+  battle-menu-attack: Attack
+  battle-menu-skills: Skills
+  battle-menu-items: Items
+  battle-menu-player-info: PlayerInfo
+  battle-menu-enemy-info: EnemyInfo
   battle-hp-title: HP
   battle-hp-text: '{}/{}'
   battle-tp-title: TP
   battle-tp-text: '{}/{}'
+  battle-message-turns: Turn {}
   battle-message-battle-start: |-
     {}が襲いかかってきた！
   battle-message-turn-start: |-

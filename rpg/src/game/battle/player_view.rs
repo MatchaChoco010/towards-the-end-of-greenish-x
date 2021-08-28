@@ -193,11 +193,23 @@ impl<'a> PlayerView<'a> {
 
     pub(super) async fn blink_animation_loop(&self) {
         loop {
-            self.cx
-                .play_animation(self.player_image, "/animation/battle/blink-loop.yml")
-                .await
-                .expect("animation not found");
+            for i in 0..60 {
+                let overlay = 1.0
+                    - if i < 30 {
+                        i as f32 / 30.0
+                    } else {
+                        (60 - i) as f32 / 30.0
+                    };
+                self.cx
+                    .set_color(self.player_image, overlay, overlay, overlay)
+                    .unwrap();
+                next_frame().await;
+            }
         }
+    }
+
+    pub(super) fn reset_blink(&self) {
+        self.cx.set_color(self.player_image, 1.0, 1.0, 1.0).unwrap();
     }
 }
 impl<'a> Drop for PlayerView<'a> {

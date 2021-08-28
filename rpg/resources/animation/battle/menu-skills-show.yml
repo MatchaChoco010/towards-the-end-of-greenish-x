@@ -1,0 +1,15 @@
+len: 20
+fps: 60
+data:
+  - - Position_x
+    - keys:
+        - frame: 1
+          value: 30.287609
+        - frame: 20
+          value: 50.287609
+  - - Opacity_opacity
+    - keys:
+        - frame: 1
+          value: 0.0
+        - frame: 20
+          value: 1.0

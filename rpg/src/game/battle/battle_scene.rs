@@ -1,5 +1,7 @@
+use animation_engine::executor::*;
 use animation_engine::*;
 use futures::{join, select, FutureExt};
+use std::time::Duration;
 
 use crate::game;
 use crate::game::battle::battle_view::*;
@@ -9,6 +11,11 @@ use crate::input;
 pub enum BattleResult {
     Win,
     Lose,
+}
+
+enum BattleCommand {
+    Skill(usize),
+    Item(usize),
 }
 
 pub(super) struct BattleScene<'a> {
@@ -38,6 +45,73 @@ impl<'a> BattleScene<'a> {
         }
     }
 
+    async fn select_command(&self, player_state: &mut game::PlayerState) -> BattleCommand {
+        let mut index = 0;
+        self.view.set_menu_cursor(index);
+        self.view.show_menu().await;
+
+        loop {
+            self.view.set_menu_active(true);
+            loop {
+                select! {
+                    _ = input::wait_down(self.cx).fuse() => {
+                        index = (index + 1) % 5;
+                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    }
+                    _ = input::wait_up(self.cx).fuse() => {
+                        index = (index + 5 - 1) % 5;
+                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    }
+                    _ = input::wait_select_button(self.cx).fuse() => {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        break;
+                    }
+                }
+                self.view.set_menu_cursor(index);
+                delay(Duration::from_millis(150)).await;
+            }
+
+            next_frame().await;
+            self.view.set_menu_active(false);
+
+            if index == 2 {
+                select! {
+                    _ = self.view.player_blink_animation_loop().fuse() => unreachable!(),
+                    _ = input::wait_select_button(self.cx).fuse() => {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        break;
+                    }
+                    _ = input::wait_cancel_button(self.cx).fuse() => {
+                        self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                    }
+                }
+            } else {
+                select! {
+                    _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
+                    _ = input::wait_select_button(self.cx).fuse() => {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        break;
+                    }
+                    _ = input::wait_cancel_button(self.cx).fuse() => {
+                        self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                    }
+                }
+            }
+            self.view.reset_player_blink();
+            self.view.reset_enemy_blink();
+        }
+
+        self.view.reset_player_blink();
+        self.view.reset_enemy_blink();
+        self.view.hide_menu().await;
+
+        if index == 2 {
+            BattleCommand::Item(0)
+        } else {
+            BattleCommand::Skill(0)
+        }
+    }
+
     pub(crate) async fn start(&self, player_state: &mut game::PlayerState) -> BattleResult {
         self.view.set_monster_image(
             "/image/monster/monster.png",
@@ -58,7 +132,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        input::wait_select_button(self.cx).await;
+        self.select_command(player_state).await;
         self.view.player_blink_animation().await;
         input::wait_select_button(self.cx).await;
         self.view.enemy_blink_animation().await;
@@ -67,11 +141,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        select! {
-            _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-            _ = input::wait_select_button(self.cx).fuse() => (),
-        }
-        self.view.reset_enemy_blink();
+        self.select_command(player_state).await;
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(200, 250);
         join!(
@@ -93,10 +163,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        select! {
-            _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-            _ = input::wait_select_button(self.cx).fuse() => (),
-        }
+        self.select_command(player_state).await;
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(170, 250);
         join!(
@@ -115,10 +182,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        select! {
-            _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-            _ = input::wait_select_button(self.cx).fuse() => (),
-        }
+        self.select_command(player_state).await;
         self.view.set_enemy_hp(230, 250);
         join!(
             self.view.enemy_heal_animation(60),
@@ -140,10 +204,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        select! {
-            _ = self.view.player_blink_animation_loop().fuse() => unreachable!(),
-            _ = input::wait_select_button(self.cx).fuse() => (),
-        }
+        self.select_command(player_state).await;
         self.view.set_player_hp(90, 150);
         self.view.set_player_tp(30, 50);
         self.view.player_heal_animation(20);
@@ -164,10 +225,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        select! {
-            _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-            _ = input::wait_select_button(self.cx).fuse() => (),
-        }
+        self.select_command(player_state).await;
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(110, 250);
         join!(
@@ -189,10 +247,7 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        select! {
-            _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-            _ = input::wait_select_button(self.cx).fuse() => (),
-        }
+        self.select_command(player_state).await;
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(0, 250);
         join!(

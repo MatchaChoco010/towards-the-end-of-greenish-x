@@ -27,7 +27,7 @@ impl GlobalData {
 
         trace!("Load overlay image");
         let overlay_image = cx.add_image(AddImageInfo {
-            name: "/image/ui/title-overlay.png".into(),
+            name: "/image/ui/overlay.png".into(),
             z: 1000,
             ..Default::default()
         });
