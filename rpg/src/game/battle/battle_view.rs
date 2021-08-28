@@ -4,8 +4,10 @@ use futures::{join, select, FutureExt};
 use std::time::Duration;
 
 use crate::game::battle::background_view::*;
+use crate::game::battle::battle_model::SelectCommandData;
 use crate::game::battle::cover_view::*;
 use crate::game::battle::enemy_view::*;
+use crate::game::battle::items_window::*;
 use crate::game::battle::menu_view::*;
 use crate::game::battle::message_window_view::*;
 use crate::game::battle::player_view::*;
@@ -14,10 +16,11 @@ use crate::game_data;
 use crate::game_data::*;
 use crate::input;
 
-pub(super) struct ItemViewItem {
-    item_name_key: String,
-    item_description_key: String,
+pub(super) enum BattleCommand {
+    Skill(SkillId),
+    Item(ItemId),
 }
+
 pub(super) struct PlayerModifierViewItem<'a> {
     name_key: String,
     turns: u32,
@@ -40,6 +43,7 @@ pub(super) struct BattleView<'a> {
     enemy: EnemyView<'a>,
     menu: MenuView<'a>,
     skills: SkillsWindow<'a>,
+    items: ItemsWindow<'a>,
 }
 impl<'a> BattleView<'a> {
     pub(super) fn new(
@@ -54,6 +58,7 @@ impl<'a> BattleView<'a> {
         let enemy = EnemyView::new(cx);
         let menu = MenuView::new(cx);
         let skills = SkillsWindow::new(cx);
+        let items = ItemsWindow::new(cx);
         Self {
             cx,
             background,
@@ -63,6 +68,7 @@ impl<'a> BattleView<'a> {
             enemy,
             menu,
             skills,
+            items,
         }
     }
 
@@ -162,80 +168,140 @@ impl<'a> BattleView<'a> {
         self.menu.hide().await;
     }
 
-    pub(super) async fn select_skill<'b>(
+    pub(super) async fn select_command<'b>(
         &mut self,
-        skills: Vec<SkillWindowItem>,
-        skill_data: Vec<&'b SkillData>,
-    ) -> Option<&'b SkillData> {
-        self.skills.set_skills(skills.clone());
+        data: SelectCommandData<'b>,
+    ) -> BattleCommand {
+        let SelectCommandData {
+            skills,
+            skill_data,
+            items,
+            item_data,
+        } = data;
 
-        let len = skills.len();
-        let mut view_top_index = 0;
-        let mut cursor_index = 0;
-        self.skills.set_cursor(
-            &skill_data[cursor_index].skill_description,
-            view_top_index,
-            cursor_index,
-        );
+        let mut index = 0;
+        self.set_menu_cursor(index);
+        self.show_menu().await;
 
-        self.skills.show().await;
-        self.skills.set_cursor(
-            &skill_data[cursor_index].skill_description,
-            view_top_index,
-            cursor_index,
-        );
-        let canceled = loop {
-            select! {
-                _ = input::wait_up(self.cx).fuse() => {
-                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                    if len > 0 {
-                        cursor_index = (cursor_index - 1 + len) % len;
-                    }
-                    if cursor_index < view_top_index {
-                        view_top_index = cursor_index
-                    }
-                    if cursor_index > view_top_index + 10 {
-                        view_top_index = cursor_index - 10
-                    }
-                },
-                _ = input::wait_down(self.cx).fuse() => {
-                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                    if len > 0 {
-                        cursor_index = (cursor_index + 1 + len) % len;
-                    }
-                    if cursor_index < view_top_index {
-                        view_top_index = cursor_index
-                    }
-                    if cursor_index > view_top_index + 10 {
-                        view_top_index = cursor_index - 10
-                    }
-                },
-                _ = input::wait_select_button(self.cx).fuse() => {
-                    if skills[cursor_index].active {
-                        self.cx.play_sfx("/audio/sfx/select.ogg");
-                        break false;
-                    } else {
+        let command = 'select_command: loop {
+            self.set_menu_active(true);
+            loop {
+                select! {
+                    _ = input::wait_down(self.cx).fuse() => {
+                        index = (index + 1) % 5;
                         self.cx.play_sfx("/audio/sfx/cursor.ogg");
                     }
-                },
-                _ = input::wait_cancel_button(self.cx).fuse() => {
-                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                    break true;
-                },
+                    _ = input::wait_up(self.cx).fuse() => {
+                        index = (index + 5 - 1) % 5;
+                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    }
+                    _ = input::wait_select_button(self.cx).fuse() => {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        break;
+                    }
+                }
+                self.set_menu_cursor(index);
+                delay(Duration::from_millis(150)).await;
             }
-            self.skills.set_cursor(
-                &skill_data[cursor_index].skill_description,
-                view_top_index,
-                cursor_index,
-            );
-            delay(Duration::from_millis(150)).await;
-        };
-        self.skills.hide().await;
 
-        if canceled {
-            None
-        } else {
-            Some(skill_data[cursor_index])
-        }
+            next_frame().await;
+            self.set_menu_active(false);
+
+            match index {
+                0 => {
+                    select! {
+                        _ = self.enemy_blink_animation_loop().fuse() => unreachable!(),
+                        _ = input::wait_select_button(self.cx).fuse() => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                            break 'select_command BattleCommand::Skill(SkillId(0));
+                        }
+                        _ = input::wait_cancel_button(self.cx).fuse() => {
+                            self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                            self.reset_player_blink();
+                            self.reset_enemy_blink();
+                        }
+                    }
+                }
+                1 => loop {
+                    if let Some(skill) = self.skills.select_skill(&skills, &skill_data).await {
+                        if skill.skill_target == SkillTarget::Enemy {
+                            select! {
+                                _ = self.enemy_blink_animation_loop().fuse() => unreachable!(),
+                                _ = input::wait_select_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                                    break 'select_command BattleCommand::Skill(skill.id);
+                                }
+                                _ = input::wait_cancel_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                                    self.reset_player_blink();
+                                    self.reset_enemy_blink();
+                                }
+                            }
+                        } else {
+                            select! {
+                                _ = self.player_blink_animation_loop().fuse() => unreachable!(),
+                                _ = input::wait_select_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                                    break 'select_command BattleCommand::Skill(skill.id);
+                                }
+                                _ = input::wait_cancel_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                                    self.reset_player_blink();
+                                    self.reset_enemy_blink();
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                },
+                2 => loop {
+                    if let Some(item) = self.items.select_item(&items, &item_data).await {
+                        if item.item_target == ItemTarget::Enemy {
+                            select! {
+                                _ = self.enemy_blink_animation_loop().fuse() => unreachable!(),
+                                _ = input::wait_select_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                                    break 'select_command BattleCommand::Item(item.id);
+                                }
+                                _ = input::wait_cancel_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                                    self.reset_player_blink();
+                                    self.reset_enemy_blink();
+                                }
+                            }
+                        } else {
+                            select! {
+                                _ = self.player_blink_animation_loop().fuse() => unreachable!(),
+                                _ = input::wait_select_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                                    break 'select_command BattleCommand::Item(item.id);
+                                }
+                                _ = input::wait_cancel_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                                    self.reset_player_blink();
+                                    self.reset_enemy_blink();
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                },
+                3 => {
+                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                }
+                4 => {
+                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                }
+                _ => unreachable!(),
+            }
+        };
+
+        self.reset_player_blink();
+        self.reset_enemy_blink();
+        self.hide_menu().await;
+
+        command
     }
 }

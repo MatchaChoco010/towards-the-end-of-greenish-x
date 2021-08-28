@@ -1,10 +1,8 @@
-use animation_engine::executor::*;
 use animation_engine::*;
-use futures::{join, select, FutureExt};
-use std::time::Duration;
+use futures::join;
 
 use crate::game;
-use crate::game::battle::battle_model::BattleModel;
+use crate::game::battle::battle_model::*;
 use crate::game::battle::battle_view::*;
 use crate::game_data::*;
 use crate::input;
@@ -12,11 +10,6 @@ use crate::input;
 pub enum BattleResult {
     Win,
     Lose,
-}
-
-enum BattleCommand {
-    Skill(SkillId),
-    Item(ItemId),
 }
 
 pub(super) struct BattleScene<'a> {
@@ -36,115 +29,6 @@ impl<'a> BattleScene<'a> {
         let view = BattleView::new(cx, time, player_index);
         let model = BattleModel::new(player_index, player_data, item_data);
         Self { cx, view, model }
-    }
-
-    async fn select_command(&mut self, player_state: &mut game::PlayerState) -> BattleCommand {
-        let mut index = 0;
-        self.view.set_menu_cursor(index);
-        self.view.show_menu().await;
-
-        let command = 'select_command: loop {
-            self.view.set_menu_active(true);
-            loop {
-                select! {
-                    _ = input::wait_down(self.cx).fuse() => {
-                        index = (index + 1) % 5;
-                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                    }
-                    _ = input::wait_up(self.cx).fuse() => {
-                        index = (index + 5 - 1) % 5;
-                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
-                    }
-                    _ = input::wait_select_button(self.cx).fuse() => {
-                        self.cx.play_sfx("/audio/sfx/select.ogg");
-                        break;
-                    }
-                }
-                self.view.set_menu_cursor(index);
-                delay(Duration::from_millis(150)).await;
-            }
-
-            next_frame().await;
-            self.view.set_menu_active(false);
-
-            match index {
-                0 => {
-                    select! {
-                        _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-                        _ = input::wait_select_button(self.cx).fuse() => {
-                            self.cx.play_sfx("/audio/sfx/select.ogg");
-                            break 'select_command BattleCommand::Skill(SkillId(0));
-                        }
-                        _ = input::wait_cancel_button(self.cx).fuse() => {
-                            self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                            self.view.reset_player_blink();
-                            self.view.reset_enemy_blink();
-                        }
-                    }
-                }
-                1 => loop {
-                    let (skills, skill_data) = self.model.get_skill_data(player_state);
-                    if let Some(skill) = self.view.select_skill(skills, skill_data).await {
-                        if skill.skill_target == SkillTarget::Enemy {
-                            select! {
-                                _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-                                _ = input::wait_select_button(self.cx).fuse() => {
-                                    self.cx.play_sfx("/audio/sfx/select.ogg");
-                                    break 'select_command BattleCommand::Skill(skill.id);
-                                }
-                                _ = input::wait_cancel_button(self.cx).fuse() => {
-                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                                    self.view.reset_player_blink();
-                                    self.view.reset_enemy_blink();
-                                }
-                            }
-                        } else {
-                            select! {
-                                _ = self.view.player_blink_animation_loop().fuse() => unreachable!(),
-                                _ = input::wait_select_button(self.cx).fuse() => {
-                                    self.cx.play_sfx("/audio/sfx/select.ogg");
-                                    break 'select_command BattleCommand::Skill(skill.id);
-                                }
-                                _ = input::wait_cancel_button(self.cx).fuse() => {
-                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                                    self.view.reset_player_blink();
-                                    self.view.reset_enemy_blink();
-                                }
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                },
-                2 => {
-                    select! {
-                        _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-                        _ = input::wait_select_button(self.cx).fuse() => {
-                            self.cx.play_sfx("/audio/sfx/select.ogg");
-                            break 'select_command BattleCommand::Item(ItemId(0));
-                        }
-                        _ = input::wait_cancel_button(self.cx).fuse() => {
-                            self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                            self.view.reset_player_blink();
-                            self.view.reset_enemy_blink();
-                        }
-                    }
-                }
-                3 => {
-                    self.cx.play_sfx("/audio/sfx/select.ogg");
-                }
-                4 => {
-                    self.cx.play_sfx("/audio/sfx/select.ogg");
-                }
-                _ => unreachable!(),
-            }
-        };
-
-        self.view.reset_player_blink();
-        self.view.reset_enemy_blink();
-        self.view.hide_menu().await;
-
-        command
     }
 
     pub(crate) async fn start(&mut self, player_state: &mut game::PlayerState) -> BattleResult {
@@ -314,7 +198,8 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        match self.select_command(player_state).await {
+        let data = self.model.select_command_data(player_state);
+        match self.view.select_command(data).await {
             BattleCommand::Skill(_skill) => (),
             BattleCommand::Item(_item) => (),
         }

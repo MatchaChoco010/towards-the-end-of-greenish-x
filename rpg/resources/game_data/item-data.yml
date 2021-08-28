@@ -2,19 +2,24 @@
   item_name: item-name-0
   item_name_with_count: item-name-with-count-0
   item_description: item-description-0
+  item_target: Player
 - id: 1
   item_name: item-name-1
   item_name_with_count: item-name-with-count-1
   item_description: item-description-1
+  item_target: Player
 - id: 2
   item_name: item-name-2
   item_name_with_count: item-name-with-count-2
   item_description: item-description-2
+  item_target: Player
 - id: 3
   item_name: item-name-3
   item_name_with_count: item-name-with-count-3
   item_description: item-description-3
+  item_target: Player
 - id: 4
   item_name: item-name-4
   item_name_with_count: item-name-with-count-4
   item_description: item-description-4
+  item_target: Player

@@ -6,29 +6,26 @@ use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
 
-use crate::game::battle::number_view::*;
 use crate::game_data::*;
 use crate::input;
 
 #[derive(Clone)]
-pub(super) struct SkillWindowItem {
+pub(super) struct ItemWindowItem {
     pub name_key: String,
-    pub costs: Number,
     pub active: bool,
 }
 
-pub(super) struct SkillsWindow<'a> {
+pub(super) struct ItemsWindow<'a> {
     cx: &'a AnimationEngineContext,
     cover: Entity,
     part_9: Entity,
     part_10: Entity,
     part_11: Entity,
     description: Entity,
-    skills: Vec<SkillWindowItem>,
-    skill_name_entities: Vec<Entity>,
-    skill_costs: Vec<NumberView<'a>>,
+    items: Vec<ItemWindowItem>,
+    item_name_entities: Vec<Entity>,
 }
-impl<'a> SkillsWindow<'a> {
+impl<'a> ItemsWindow<'a> {
     pub(super) fn new(cx: &'a AnimationEngineContext) -> Self {
         let cover = cx.add_rect(AddRectInfo {
             width: 1280.0,
@@ -71,11 +68,10 @@ impl<'a> SkillsWindow<'a> {
             rotation: -0.0872665,
             ..Default::default()
         });
-        let skills = vec![];
-        let mut skill_name_entities = vec![];
-        let mut skill_costs = vec![];
+        let items = vec![];
+        let mut item_name_entities = vec![];
         for i in 0..11 {
-            let skill_name = cx.add_text(AddTextInfo {
+            let item_name = cx.add_text(AddTextInfo {
                 font_size: 24.0,
                 x: 120.0 - 44.0 * 0.0872665 * i as f32,
                 y: 194.0 + 44.0 * i as f32,
@@ -84,15 +80,7 @@ impl<'a> SkillsWindow<'a> {
                 rotation: -0.0872665,
                 ..Default::default()
             });
-            let num = NumberView::new(
-                cx,
-                510.0 - 44.0 * 0.0872665 * i as f32,
-                175.0 + 44.0 * i as f32,
-                510,
-            );
-            num.set_opacity(0.0);
-            skill_name_entities.push(skill_name);
-            skill_costs.push(num);
+            item_name_entities.push(item_name);
         }
         Self {
             cx,
@@ -101,9 +89,8 @@ impl<'a> SkillsWindow<'a> {
             part_10,
             part_11,
             description,
-            skills,
-            skill_name_entities,
-            skill_costs,
+            items,
+            item_name_entities,
         }
     }
 
@@ -112,36 +99,29 @@ impl<'a> SkillsWindow<'a> {
         let x = 107.0 - 0.0872665 * 44.0 * cursor_pos as f32;
         let y = 152.0 + 44.0 * cursor_pos as f32;
         self.cx.set_position(self.part_10, x, y, 507).unwrap();
-        for &entity in &self.skill_name_entities {
+        for &entity in &self.item_name_entities {
             self.cx.set_text_key(entity, "").unwrap();
         }
-        for num in &self.skill_costs {
-            num.set_opacity(0.0);
-        }
-        for i in 0..(self.skills.len().min(11)) {
+        for i in 0..(self.items.len().min(11)) {
             self.cx
                 .set_text_key(
-                    self.skill_name_entities[i],
-                    self.skills[top_index + i].name_key.to_owned(),
+                    self.item_name_entities[i],
+                    self.items[top_index + i].name_key.to_owned(),
                 )
                 .unwrap();
-            self.skill_costs[i].set_number(self.skills[top_index + i].costs);
-            if self.skills[top_index + i].active {
+            if self.items[top_index + i].active {
                 self.cx
-                    .set_opacity(self.skill_name_entities[i], 1.0)
+                    .set_opacity(self.item_name_entities[i], 1.0)
                     .unwrap();
-                self.skill_costs[i].set_opacity(1.0);
             } else {
                 if top_index + i == cursor_index {
                     self.cx
-                        .set_opacity(self.skill_name_entities[i], 0.6)
+                        .set_opacity(self.item_name_entities[i], 0.6)
                         .unwrap();
-                    self.skill_costs[i].set_opacity(0.6);
                 } else {
                     self.cx
-                        .set_opacity(self.skill_name_entities[i], 0.1)
+                        .set_opacity(self.item_name_entities[i], 0.1)
                         .unwrap();
-                    self.skill_costs[i].set_opacity(0.1);
                 }
             }
         }
@@ -150,8 +130,8 @@ impl<'a> SkillsWindow<'a> {
             .unwrap();
     }
 
-    fn set_skills(&mut self, skills: Vec<SkillWindowItem>) {
-        self.skills = skills;
+    fn set_items(&mut self, items: Vec<ItemWindowItem>) {
+        self.items = items;
     }
 
     async fn show(&self) {
@@ -177,24 +157,11 @@ impl<'a> SkillsWindow<'a> {
                 "/animation/battle/window-item-fade-in.yml",
             )),
         ];
-        for &entity in &self.skill_name_entities {
+        for &entity in &self.item_name_entities {
             anims.push(Box::pin(self.cx.play_animation(
                 entity,
                 "/animation/battle/window-item-nonactive-fade-in.yml",
             )));
-        }
-        for i in 0..self.skill_costs.len() {
-            let num = &self.skill_costs[i];
-            let show = self.skills.get(i).is_some();
-            if show {
-                anims.push(Box::pin(async move {
-                    num.start_animation("/animation/battle/window-item-nonactive-fade-in.yml")
-                        .await;
-                    Ok(())
-                }));
-            } else {
-                num.set_opacity(0.0);
-            }
         }
         try_join_all(anims).await.expect("animation not found");
     }
@@ -222,47 +189,34 @@ impl<'a> SkillsWindow<'a> {
                 "/animation/battle/window-item-fade-out.yml",
             )),
         ];
-        for &entity in &self.skill_name_entities {
+        for &entity in &self.item_name_entities {
             anims.push(Box::pin(self.cx.play_animation(
                 entity,
                 "/animation/battle/window-item-nonactive-fade-out.yml",
             )));
         }
-        for i in 0..self.skill_costs.len() {
-            let num = &self.skill_costs[i];
-            let show = self.skills.get(i).is_some();
-            if show {
-                anims.push(Box::pin(async move {
-                    num.start_animation("/animation/battle/window-item-nonactive-fade-out.yml")
-                        .await;
-                    Ok(())
-                }));
-            } else {
-                num.set_opacity(0.0);
-            }
-        }
         try_join_all(anims).await.expect("animation not found");
     }
 
-    pub(super) async fn select_skill<'b>(
+    pub(super) async fn select_item<'b>(
         &mut self,
-        skills: &[SkillWindowItem],
-        skill_data: &[&'b SkillData],
-    ) -> Option<&'b SkillData> {
-        self.set_skills(skills.to_vec());
+        items: &[ItemWindowItem],
+        item_data: &[&'b ItemData],
+    ) -> Option<&'b ItemData> {
+        self.set_items(items.to_vec());
 
-        let len = skills.len();
+        let len = items.len();
         let mut view_top_index = 0;
         let mut cursor_index = 0;
         self.set_cursor(
-            &skill_data[cursor_index].skill_description,
+            &item_data[cursor_index].item_description,
             view_top_index,
             cursor_index,
         );
 
         self.show().await;
         self.set_cursor(
-            &skill_data[cursor_index].skill_description,
+            &item_data[cursor_index].item_description,
             view_top_index,
             cursor_index,
         );
@@ -293,7 +247,7 @@ impl<'a> SkillsWindow<'a> {
                     }
                 },
                 _ = input::wait_select_button(self.cx).fuse() => {
-                    if skills[cursor_index].active {
+                    if items[cursor_index].active {
                         self.cx.play_sfx("/audio/sfx/select.ogg");
                         break false;
                     } else {
@@ -306,7 +260,7 @@ impl<'a> SkillsWindow<'a> {
                 },
             }
             self.set_cursor(
-                &skill_data[cursor_index].skill_description,
+                &item_data[cursor_index].item_description,
                 view_top_index,
                 cursor_index,
             );
@@ -317,18 +271,18 @@ impl<'a> SkillsWindow<'a> {
         if canceled {
             None
         } else {
-            Some(skill_data[cursor_index])
+            Some(item_data[cursor_index])
         }
     }
 }
-impl<'a> Drop for SkillsWindow<'a> {
+impl<'a> Drop for ItemsWindow<'a> {
     fn drop(&mut self) {
         self.cx.delete_entity(self.cover);
         self.cx.delete_entity(self.part_9);
         self.cx.delete_entity(self.part_10);
         self.cx.delete_entity(self.part_11);
         self.cx.delete_entity(self.description);
-        for entity in self.skill_name_entities.drain(0..) {
+        for entity in self.item_name_entities.drain(0..) {
             self.cx.delete_entity(entity);
         }
     }

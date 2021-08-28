@@ -11,6 +11,7 @@ mod battle_view;
 mod cover_view;
 mod damage_number_view;
 mod enemy_view;
+mod items_window;
 mod menu_view;
 mod message_window_view;
 mod number_view;
