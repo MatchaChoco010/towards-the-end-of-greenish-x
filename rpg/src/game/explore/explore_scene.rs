@@ -146,6 +146,7 @@ impl<'a> ExploreScene<'a> {
         save_data: &mut save_data::SaveData,
         player_data: &PlayerData,
         item_data: &Vec<ItemData>,
+        game_data: &GameData,
         level_item: &LevelItem,
     ) -> ProcessEventResult {
         match level_item {
@@ -158,6 +159,7 @@ impl<'a> ExploreScene<'a> {
                             save_data,
                             player_data,
                             item_data,
+                            game_data,
                             level_item,
                         )
                         .await;
@@ -180,6 +182,7 @@ impl<'a> ExploreScene<'a> {
                         save_data,
                         player_data,
                         item_data,
+                        game_data,
                         level_item,
                     )
                     .await;
@@ -224,6 +227,7 @@ impl<'a> ExploreScene<'a> {
                         save_data,
                         player_data,
                         item_data,
+                        game_data,
                         &branches[index].item,
                     )
                     .await;
@@ -239,15 +243,16 @@ impl<'a> ExploreScene<'a> {
             }
             LevelItem::ChangeToAfternoon => self.background.change_to_afternoon().await,
             LevelItem::ChangeToNight => self.background.change_to_night().await,
-            LevelItem::Battle { id, bgm, time } => {
+            LevelItem::Battle { id: _id, bgm, time } => {
+                // let battle_data = &game_data.battle_data[id];
                 self.cx.play_bgm(bgm);
                 self.cover.start_battle().await;
                 let result = battle(
                     self.cx,
-                    player_data,
+                    // battle_data,
                     self.player_index,
+                    player_data,
                     item_data,
-                    *id,
                     player_state,
                     *time,
                 )
@@ -337,6 +342,7 @@ impl<'a> ExploreScene<'a> {
                     save_data,
                     player_data,
                     item_data,
+                    game_data,
                     level_item,
                 )
                 .await

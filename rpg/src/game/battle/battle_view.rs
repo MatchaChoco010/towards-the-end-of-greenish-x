@@ -1,5 +1,7 @@
+use animation_engine::executor::*;
 use animation_engine::*;
 use futures::{join, select, FutureExt};
+use std::time::Duration;
 
 use crate::game::battle::background_view::*;
 use crate::game::battle::cover_view::*;
@@ -9,6 +11,8 @@ use crate::game::battle::message_window_view::*;
 use crate::game::battle::player_view::*;
 use crate::game::battle::skills_window::*;
 use crate::game_data;
+use crate::game_data::*;
+use crate::input;
 
 pub(super) struct ItemViewItem {
     item_name_key: String,
@@ -158,51 +162,80 @@ impl<'a> BattleView<'a> {
         self.menu.hide().await;
     }
 
-    pub(super) fn set_skills(&mut self, skills: &[SkillWindowItem]) {
-        self.skills.set_skills(skills.to_vec());
-    }
-    pub(super) fn set_skills_cursor(
+    pub(super) async fn select_skill<'b>(
         &mut self,
-        description: impl ToString,
-        top_index: usize,
-        cursor_index: usize,
-    ) {
-        self.skills.set_cursor(description, top_index, cursor_index);
-    }
-    pub(super) async fn show_skills(&self) {
+        skills: Vec<SkillWindowItem>,
+        skill_data: Vec<&'b SkillData>,
+    ) -> Option<&'b SkillData> {
+        self.skills.set_skills(skills.clone());
+
+        let len = skills.len();
+        let mut view_top_index = 0;
+        let mut cursor_index = 0;
+        self.skills.set_cursor(
+            &skill_data[cursor_index].skill_description,
+            view_top_index,
+            cursor_index,
+        );
+
         self.skills.show().await;
-    }
-    pub(super) async fn hide_skills(&self) {
+        self.skills.set_cursor(
+            &skill_data[cursor_index].skill_description,
+            view_top_index,
+            cursor_index,
+        );
+        let canceled = loop {
+            select! {
+                _ = input::wait_up(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    if len > 0 {
+                        cursor_index = (cursor_index - 1 + len) % len;
+                    }
+                    if cursor_index < view_top_index {
+                        view_top_index = cursor_index
+                    }
+                    if cursor_index > view_top_index + 10 {
+                        view_top_index = cursor_index - 10
+                    }
+                },
+                _ = input::wait_down(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    if len > 0 {
+                        cursor_index = (cursor_index + 1 + len) % len;
+                    }
+                    if cursor_index < view_top_index {
+                        view_top_index = cursor_index
+                    }
+                    if cursor_index > view_top_index + 10 {
+                        view_top_index = cursor_index - 10
+                    }
+                },
+                _ = input::wait_select_button(self.cx).fuse() => {
+                    if skills[cursor_index].active {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        break false;
+                    } else {
+                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    }
+                },
+                _ = input::wait_cancel_button(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                    break true;
+                },
+            }
+            self.skills.set_cursor(
+                &skill_data[cursor_index].skill_description,
+                view_top_index,
+                cursor_index,
+            );
+            delay(Duration::from_millis(150)).await;
+        };
         self.skills.hide().await;
-    }
 
-    pub(super) fn set_items(
-        &mut self,
-        items: &[ItemViewItem],
-        top_index: usize,
-        cursor_index: usize,
-    ) {
+        if canceled {
+            None
+        } else {
+            Some(skill_data[cursor_index])
+        }
     }
-    pub(super) async fn show_items(&self) {}
-    pub(super) async fn hide_items(&self) {}
-
-    pub(super) fn set_player_info(
-        &mut self,
-        player_modifiers: &Vec<PlayerModifierViewItem>,
-        top_index: usize,
-        cursor_index: usize,
-    ) {
-    }
-    pub(super) async fn show_player_info(&self) {}
-    pub(super) async fn hide_player_info(&self) {}
-
-    pub(super) fn set_enemy_info(
-        &mut self,
-        enemy_modifiers: &Vec<EnemyModifierViewItem>,
-        top_index: usize,
-        cursor_index: usize,
-    ) {
-    }
-    pub(super) async fn show_enemy_info(&self) {}
-    pub(super) async fn hide_enemy_info(&self) {}
 }
