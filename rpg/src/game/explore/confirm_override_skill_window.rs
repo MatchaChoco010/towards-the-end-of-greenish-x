@@ -356,8 +356,8 @@ impl<'a> ConfirmOverrideSkillWindow<'a> {
 
     pub(crate) async fn open_override_skill(
         &self,
-        current_skill_id: usize,
-        new_skill_id: usize,
+        current_skill_id: SkillId,
+        new_skill_id: SkillId,
         skills: &Vec<SkillData>,
     ) {
         let current_skill_name_key = &skills

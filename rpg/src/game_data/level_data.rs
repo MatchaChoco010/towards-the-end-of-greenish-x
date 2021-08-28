@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::game_data::*;
+
 #[derive(Deserialize)]
 pub struct RandomBranch {
     pub weight: f64,
@@ -63,7 +65,7 @@ pub enum LevelItem {
         count: u8,
     },
     AddItem {
-        item_id: usize,
+        item_id: ItemId,
         count: usize,
     },
 }

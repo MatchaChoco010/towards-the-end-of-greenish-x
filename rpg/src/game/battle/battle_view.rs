@@ -7,12 +7,9 @@ use crate::game::battle::enemy_view::*;
 use crate::game::battle::menu_view::*;
 use crate::game::battle::message_window_view::*;
 use crate::game::battle::player_view::*;
+use crate::game::battle::skills_window::*;
 use crate::game_data;
 
-pub(super) struct SkillViewItem {
-    skill_name_key: String,
-    skill_description_key: String,
-}
 pub(super) struct ItemViewItem {
     item_name_key: String,
     item_description_key: String,
@@ -38,6 +35,7 @@ pub(super) struct BattleView<'a> {
     player: PlayerView<'a>,
     enemy: EnemyView<'a>,
     menu: MenuView<'a>,
+    skills: SkillsWindow<'a>,
 }
 impl<'a> BattleView<'a> {
     pub(super) fn new(
@@ -51,6 +49,7 @@ impl<'a> BattleView<'a> {
         let player = PlayerView::new(cx, player_index);
         let enemy = EnemyView::new(cx);
         let menu = MenuView::new(cx);
+        let skills = SkillsWindow::new(cx);
         Self {
             cx,
             background,
@@ -59,6 +58,7 @@ impl<'a> BattleView<'a> {
             player,
             enemy,
             menu,
+            skills,
         }
     }
 
@@ -158,15 +158,23 @@ impl<'a> BattleView<'a> {
         self.menu.hide().await;
     }
 
-    pub(super) fn set_skills(
+    pub(super) fn set_skills(&mut self, skills: &[SkillWindowItem]) {
+        self.skills.set_skills(skills.to_vec());
+    }
+    pub(super) fn set_skills_cursor(
         &mut self,
-        skills: &[SkillViewItem],
+        description: impl ToString,
         top_index: usize,
         cursor_index: usize,
     ) {
+        self.skills.set_cursor(description, top_index, cursor_index);
     }
-    pub(super) async fn show_skills(&self) {}
-    pub(super) async fn hide_skills(&self) {}
+    pub(super) async fn show_skills(&self) {
+        self.skills.show().await;
+    }
+    pub(super) async fn hide_skills(&self) {
+        self.skills.hide().await;
+    }
 
     pub(super) fn set_items(
         &mut self,

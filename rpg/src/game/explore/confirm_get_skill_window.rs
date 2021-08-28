@@ -172,7 +172,7 @@ impl<'a> ConfirmGetSkillWindow<'a> {
         self.open_window_animation().await;
     }
 
-    pub(crate) async fn open_get_skill(&self, skill_id: usize, skills: &Vec<SkillData>) {
+    pub(crate) async fn open_get_skill(&self, skill_id: SkillId, skills: &Vec<SkillData>) {
         let get_skill_confirm_message = &skills
             .iter()
             .find(|s| s.id == skill_id)

@@ -14,6 +14,7 @@ mod menu_view;
 mod message_window_view;
 mod number_view;
 mod player_view;
+mod skills_window;
 
 pub use battle_scene::*;
 

@@ -129,7 +129,7 @@ impl<'a> ExploreScene<'a> {
 
     async fn wait_add_skill(
         &self,
-        skill_id_list: &[usize],
+        skill_id_list: &[SkillId],
         player_state: &mut PlayerState,
         player_data: &PlayerData,
     ) {
@@ -293,7 +293,7 @@ impl<'a> ExploreScene<'a> {
                     let (skill_id, _) = list.remove(index);
                     candidate_skills.push(skill_id);
                 }
-                candidate_skills.sort();
+                candidate_skills.sort_by_key(|s| s.0);
                 self.wait_add_skill(&candidate_skills, player_state, player_data)
                     .await;
             }

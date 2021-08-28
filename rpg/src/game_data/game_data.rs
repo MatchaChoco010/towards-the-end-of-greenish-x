@@ -30,7 +30,7 @@ impl GameData {
             let reader = io::BufReader::new(file);
             serde_yaml::from_reader(reader)?
         };
-        item_data.sort_by_cached_key(|i: &ItemData| i.id);
+        item_data.sort_by_cached_key(|i: &ItemData| i.id.0);
 
         let mut level_data = vec![];
         for path in engine.filesystem().read_dir("/game_data/level-data/")? {

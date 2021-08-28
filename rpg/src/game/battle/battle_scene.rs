@@ -5,7 +5,9 @@ use std::time::Duration;
 
 use crate::game;
 use crate::game::battle::battle_view::*;
-use crate::game_data;
+use crate::game::battle::number_view::Number;
+use crate::game::battle::skills_window::SkillWindowItem;
+use crate::game_data::*;
 use crate::input;
 
 pub enum BattleResult {
@@ -14,26 +16,26 @@ pub enum BattleResult {
 }
 
 enum BattleCommand {
-    Skill(usize),
-    Item(usize),
+    Skill(SkillId),
+    Item(ItemId),
 }
 
 pub(super) struct BattleScene<'a> {
     cx: &'a AnimationEngineContext,
-    player_data: &'a game_data::PlayerData,
+    player_data: &'a PlayerData,
     player_index: usize,
-    item_data: &'a Vec<game_data::ItemData>,
+    item_data: &'a Vec<ItemData>,
     // battle_data
     view: BattleView<'a>,
 }
 impl<'a> BattleScene<'a> {
     pub(crate) fn new(
         cx: &'a AnimationEngineContext,
-        player_data: &'a game_data::PlayerData,
+        player_data: &'a PlayerData,
         player_index: usize,
-        item_data: &'a Vec<game_data::ItemData>,
+        item_data: &'a Vec<ItemData>,
         battle_id: usize,
-        time: game_data::BattleTime,
+        time: BattleTime,
     ) -> Self {
         let view = BattleView::new(cx, time, player_index);
         Self {
@@ -45,12 +47,115 @@ impl<'a> BattleScene<'a> {
         }
     }
 
-    async fn select_command(&self, player_state: &mut game::PlayerState) -> BattleCommand {
+    async fn select_skill(
+        &mut self,
+        player_state: &mut game::PlayerState, /*, battle_state */
+    ) -> Option<SkillId> {
+        let (skills, skill_data) = player_state
+            .get_skills()
+            .iter()
+            .map(|&skill_id| {
+                let skill_data = self
+                    .player_data
+                    .skills
+                    .iter()
+                    .find(|&s| s.id == skill_id)
+                    .unwrap();
+                let costs = if let SkillCost::Cost(cost) = skill_data.skill_cost {
+                    Number::Number(cost as i32)
+                } else {
+                    Number::Infinity
+                };
+                let active = skill_data.skill_cost != SkillCost::Infinity;
+                (
+                    SkillWindowItem {
+                        name_key: skill_data.skill_name.to_owned(),
+                        costs,
+                        active,
+                    },
+                    skill_data,
+                )
+            })
+            .unzip::<_, _, Vec<_>, Vec<_>>();
+
+        self.view.set_skills(&skills);
+
+        let len = skills.len();
+        let mut view_top_index = 0;
+        let mut cursor_index = 0;
+        self.view.set_skills_cursor(
+            &skill_data[cursor_index].skill_description,
+            view_top_index,
+            cursor_index,
+        );
+
+        self.view.show_skills().await;
+        self.view.set_skills_cursor(
+            &skill_data[cursor_index].skill_description,
+            view_top_index,
+            cursor_index,
+        );
+        let canceled = loop {
+            select! {
+                _ = input::wait_up(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    if len > 0 {
+                        cursor_index = (cursor_index - 1 + len) % len;
+                    }
+                    if cursor_index < view_top_index {
+                        view_top_index = cursor_index
+                    }
+                    if cursor_index > view_top_index + 10 {
+                        view_top_index = cursor_index - 10
+                    }
+                },
+                _ = input::wait_down(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    if len > 0 {
+                        cursor_index = (cursor_index + 1 + len) % len;
+                    }
+                    if cursor_index < view_top_index {
+                        view_top_index = cursor_index
+                    }
+                    if cursor_index > view_top_index + 10 {
+                        view_top_index = cursor_index - 10
+                    }
+                },
+                _ = input::wait_select_button(self.cx).fuse() => {
+                    if skills[cursor_index].active {
+                        self.cx.play_sfx("/audio/sfx/select.ogg");
+                        break false;
+                    } else {
+                        self.cx.play_sfx("/audio/sfx/cursor.ogg");
+                    }
+                },
+                _ = input::wait_cancel_button(self.cx).fuse() => {
+                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                    break true;
+                },
+            }
+            self.view.set_skills_cursor(
+                &skill_data[cursor_index].skill_description,
+                view_top_index,
+                cursor_index,
+            );
+            delay(Duration::from_millis(150)).await;
+        };
+        self.view.hide_skills().await;
+
+        if canceled {
+            None
+        } else {
+            Some(skill_data[cursor_index].id)
+        }
+    }
+
+    async fn select_command(&mut self, player_state: &mut game::PlayerState) -> BattleCommand {
         let mut index = 0;
         self.view.set_menu_cursor(index);
         self.view.show_menu().await;
 
-        loop {
+        let command = 'select_command: loop {
             self.view.set_menu_active(true);
             loop {
                 select! {
@@ -74,45 +179,94 @@ impl<'a> BattleScene<'a> {
             next_frame().await;
             self.view.set_menu_active(false);
 
-            if index == 2 {
-                select! {
-                    _ = self.view.player_blink_animation_loop().fuse() => unreachable!(),
-                    _ = input::wait_select_button(self.cx).fuse() => {
-                        self.cx.play_sfx("/audio/sfx/select.ogg");
-                        break;
-                    }
-                    _ = input::wait_cancel_button(self.cx).fuse() => {
-                        self.cx.play_sfx("/audio/sfx/cancel.ogg");
-                    }
-                }
-            } else {
-                select! {
-                    _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
-                    _ = input::wait_select_button(self.cx).fuse() => {
-                        self.cx.play_sfx("/audio/sfx/select.ogg");
-                        break;
-                    }
-                    _ = input::wait_cancel_button(self.cx).fuse() => {
-                        self.cx.play_sfx("/audio/sfx/cancel.ogg");
+            match index {
+                0 => {
+                    select! {
+                        _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
+                        _ = input::wait_select_button(self.cx).fuse() => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                            break 'select_command BattleCommand::Skill(SkillId(0));
+                        }
+                        _ = input::wait_cancel_button(self.cx).fuse() => {
+                            self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                            self.view.reset_player_blink();
+                            self.view.reset_enemy_blink();
+                        }
                     }
                 }
+                1 => loop {
+                    if let Some(skill) = self.select_skill(player_state).await {
+                        if self
+                            .player_data
+                            .skills
+                            .iter()
+                            .find(|s| s.id == skill)
+                            .unwrap()
+                            .skill_target
+                            == SkillTarget::Enemy
+                        {
+                            select! {
+                                _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
+                                _ = input::wait_select_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                                    break 'select_command BattleCommand::Skill(skill);
+                                }
+                                _ = input::wait_cancel_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                                    self.view.reset_player_blink();
+                                    self.view.reset_enemy_blink();
+                                }
+                            }
+                        } else {
+                            select! {
+                                _ = self.view.player_blink_animation_loop().fuse() => unreachable!(),
+                                _ = input::wait_select_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                                    break 'select_command BattleCommand::Skill(skill);
+                                }
+                                _ = input::wait_cancel_button(self.cx).fuse() => {
+                                    self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                                    self.view.reset_player_blink();
+                                    self.view.reset_enemy_blink();
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                },
+                2 => {
+                    select! {
+                        _ = self.view.enemy_blink_animation_loop().fuse() => unreachable!(),
+                        _ = input::wait_select_button(self.cx).fuse() => {
+                            self.cx.play_sfx("/audio/sfx/select.ogg");
+                            break 'select_command BattleCommand::Item(ItemId(0));
+                        }
+                        _ = input::wait_cancel_button(self.cx).fuse() => {
+                            self.cx.play_sfx("/audio/sfx/cancel.ogg");
+                            self.view.reset_player_blink();
+                            self.view.reset_enemy_blink();
+                        }
+                    }
+                }
+                3 => {
+                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                }
+                4 => {
+                    self.cx.play_sfx("/audio/sfx/select.ogg");
+                }
+                _ => unreachable!(),
             }
-            self.view.reset_player_blink();
-            self.view.reset_enemy_blink();
-        }
+        };
 
         self.view.reset_player_blink();
         self.view.reset_enemy_blink();
         self.view.hide_menu().await;
 
-        if index == 2 {
-            BattleCommand::Item(0)
-        } else {
-            BattleCommand::Skill(0)
-        }
+        command
     }
 
-    pub(crate) async fn start(&self, player_state: &mut game::PlayerState) -> BattleResult {
+    pub(crate) async fn start(&mut self, player_state: &mut game::PlayerState) -> BattleResult {
         self.view.set_monster_image(
             "/image/monster/monster.png",
             "/image/monster/monster-shadow.png",
@@ -132,7 +286,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.player_blink_animation().await;
         input::wait_select_button(self.cx).await;
         self.view.enemy_blink_animation().await;
@@ -141,7 +298,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(200, 250);
         join!(
@@ -163,7 +323,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(170, 250);
         join!(
@@ -182,7 +345,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.set_enemy_hp(230, 250);
         join!(
             self.view.enemy_heal_animation(60),
@@ -204,7 +370,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.set_player_hp(90, 150);
         self.view.set_player_tp(30, 50);
         self.view.player_heal_animation(20);
@@ -225,7 +394,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(110, 250);
         join!(
@@ -247,7 +419,10 @@ impl<'a> BattleScene<'a> {
         self.view
             .set_message("battle-message-turn-start", &[])
             .await;
-        self.select_command(player_state).await;
+        match self.select_command(player_state).await {
+            BattleCommand::Skill(_skill) => (),
+            BattleCommand::Item(_item) => (),
+        }
         self.view.player_blink_animation().await;
         self.view.set_enemy_hp(0, 250);
         join!(

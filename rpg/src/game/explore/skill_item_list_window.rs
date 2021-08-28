@@ -234,7 +234,7 @@ impl<'a> SkillItemListWindow<'a> {
         &self,
         view_top_index: usize,
         cursor_index: usize,
-        skill_id_list: &[usize],
+        skill_id_list: &[SkillId],
         player_data: &PlayerData,
     ) {
         for index in view_top_index..(view_top_index + 15) {
@@ -325,7 +325,7 @@ impl<'a> SkillItemListWindow<'a> {
         &self,
         player_state: &mut PlayerState,
         player_data: &PlayerData,
-        skill_id_list: &[usize],
+        skill_id_list: &[SkillId],
     ) {
         trace!("Open add skill menu");
 
@@ -476,6 +476,7 @@ impl<'a> SkillItemListWindow<'a> {
             delay(Duration::from_millis(150)).await;
         }
     }
+
     fn set_owned_items(
         &self,
         view_top_index: usize,
@@ -484,7 +485,7 @@ impl<'a> SkillItemListWindow<'a> {
         item_data: &Vec<ItemData>,
     ) {
         let mut items = player_state.get_items();
-        items.sort_by_key(|(item, _)| item_data.iter().find(|i| &i.id == item).unwrap().id);
+        items.sort_by_key(|(item, _)| item_data.iter().find(|i| &i.id == item).unwrap().id.0);
         for index in view_top_index..(view_top_index + 15) {
             if let Some((item, count)) = items.get(index) {
                 let key = item_data

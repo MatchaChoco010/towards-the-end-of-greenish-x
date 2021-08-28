@@ -28,7 +28,7 @@ impl<'a> CoverView<'a> {
             z: 500,
             ..Default::default()
         });
-        let part_3 = cx.add_rect(AddRectInfo {
+        let cover = cx.add_rect(AddRectInfo {
             width: 1280.0,
             height: 720.0,
             r: 0.0,
@@ -43,7 +43,7 @@ impl<'a> CoverView<'a> {
             part_12,
             part_13,
             part_14,
-            cover: part_3,
+            cover,
         }
     }
 

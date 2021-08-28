@@ -14,6 +14,18 @@ prologue:
       - opening-player-1-prologue-1-1
 skills:
   - id: 0
+    skill_type: 255
+    rarity: 255
+    rarity_weight: 1.0
+    skill_name: player-attack
+    skill_name_with_level: player-attack
+    skill_description: player-attack
+    get_skill_confirm_message: player-attack
+    skill_cost:
+      Cost: 0
+    skill_target: Enemy
+
+  - id: 10
     skill_type: 0
     rarity: 0
     rarity_weight: 1.0
@@ -21,7 +33,9 @@ skills:
     skill_name_with_level: player-1-skill-name-0-level-1
     skill_description: player-1-skill-description-0-level-1
     get_skill_confirm_message: player-1-get-skill-confirm-message-0-level-1
-  - id: 1
+    skill_cost: Infinity
+    skill_target: Player
+  - id: 11
     skill_type: 0
     rarity: 1
     rarity_weight: 1.0
@@ -29,7 +43,9 @@ skills:
     skill_name_with_level: player-1-skill-name-0-level-2
     skill_description: player-1-skill-description-0-level-2
     get_skill_confirm_message: player-1-get-skill-confirm-message-0-level-2
-  - id: 2
+    skill_cost: Infinity
+    skill_target: Player
+  - id: 12
     skill_type: 0
     rarity: 1
     rarity_weight: 1.0
@@ -37,8 +53,10 @@ skills:
     skill_name_with_level: player-1-skill-name-0-level-3
     skill_description: player-1-skill-description-0-level-3
     get_skill_confirm_message: player-1-get-skill-confirm-message-0-level-3
+    skill_cost: Infinity
+    skill_target: Player
 
-  - id: 10
+  - id: 20
     skill_type: 1
     rarity: 0
     rarity_weight: 1.0
@@ -46,8 +64,11 @@ skills:
     skill_name_with_level: player-1-skill-name-1-level-1
     skill_description: player-1-skill-description-1-level-1
     get_skill_confirm_message: player-1-get-skill-confirm-message-1-level-1
+    skill_cost:
+      Cost: 0
+    skill_target: Player
 
-  - id: 20
+  - id: 30
     skill_type: 2
     rarity: 0
     rarity_weight: 1.0
@@ -55,3 +76,6 @@ skills:
     skill_name_with_level: player-1-skill-name-2-level-1
     skill_description: player-1-skill-description-2-level-1
     get_skill_confirm_message: player-1-get-skill-confirm-message-2-level-1
+    skill_cost:
+      Cost: 10
+    skill_target: Enemy
