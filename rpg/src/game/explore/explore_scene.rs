@@ -347,8 +347,9 @@ impl<'a> ExploreScene<'a> {
                         return ExploreResult::GameClear;
                     }
 
-                    self.current_depth.increment();
+                    self.cx.play_sfx("/audio/sfx/footstep.ogg");
                     self.message_list.add_space().await;
+                    self.current_depth.increment();
                 }
                 ProcessEventResult::GameOver => {
                     return ExploreResult::GameOver;
