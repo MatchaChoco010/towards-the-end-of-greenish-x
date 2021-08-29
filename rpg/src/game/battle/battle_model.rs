@@ -1,6 +1,4 @@
-use crate::game::battle::items_window::*;
-use crate::game::battle::number_view::*;
-use crate::game::battle::skills_window::*;
+use crate::game::battle::battle_view::*;
 use crate::game::PlayerState;
 use crate::game_data::*;
 

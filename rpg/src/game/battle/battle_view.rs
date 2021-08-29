@@ -3,36 +3,52 @@ use animation_engine::*;
 use futures::{join, select, FutureExt};
 use std::time::Duration;
 
-use crate::game::battle::background_view::*;
+mod background_view;
+mod cover_view;
+mod damage_number_view;
+mod enemy_view;
+mod items_window;
+mod menu_view;
+mod message_window_view;
+mod number_view;
+mod player_view;
+mod skills_window;
+
 use crate::game::battle::battle_model::SelectCommandData;
-use crate::game::battle::cover_view::*;
-use crate::game::battle::enemy_view::*;
-use crate::game::battle::items_window::*;
-use crate::game::battle::menu_view::*;
-use crate::game::battle::message_window_view::*;
-use crate::game::battle::player_view::*;
-use crate::game::battle::skills_window::*;
+use crate::game::battle::battle_view::background_view::*;
+use crate::game::battle::battle_view::cover_view::*;
+use crate::game::battle::battle_view::enemy_view::*;
+use crate::game::battle::battle_view::items_window::*;
+use crate::game::battle::battle_view::menu_view::*;
+use crate::game::battle::battle_view::message_window_view::*;
+use crate::game::battle::battle_view::player_view::*;
+use crate::game::battle::battle_view::skills_window::*;
 use crate::game_data;
 use crate::game_data::*;
 use crate::input;
+
+pub(super) use items_window::ItemWindowItem;
+pub(super) use number_view::Number;
+pub(super) use number_view::NumberView;
+pub(super) use skills_window::SkillWindowItem;
 
 pub(super) enum BattleCommand {
     Skill(SkillId),
     Item(ItemId),
 }
 
-pub(super) struct PlayerModifierViewItem<'a> {
-    name_key: String,
-    turns: u32,
-    description_key: String,
-    description_args: &'a [&'a str],
-}
-pub(super) struct EnemyModifierViewItem<'a> {
-    name_key: String,
-    turns: u32,
-    description_key: String,
-    description_args: &'a [&'a str],
-}
+// pub(super) struct PlayerModifierViewItem<'a> {
+//     name_key: String,
+//     turns: u32,
+//     description_key: String,
+//     description_args: &'a [&'a str],
+// }
+// pub(super) struct EnemyModifierViewItem<'a> {
+//     name_key: String,
+//     turns: u32,
+//     description_key: String,
+//     description_args: &'a [&'a str],
+// }
 
 pub(super) struct BattleView<'a> {
     cx: &'a AnimationEngineContext,

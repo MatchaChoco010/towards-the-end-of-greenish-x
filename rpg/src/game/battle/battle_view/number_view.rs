@@ -2,12 +2,12 @@ use animation_engine::*;
 use futures::future::try_join_all;
 
 #[derive(Clone, Copy, Debug)]
-pub(super) enum Number {
+pub(in super::super) enum Number {
     Number(i32),
     Infinity,
 }
 
-pub(super) struct NumberView<'a> {
+pub(in super::super) struct NumberView<'a> {
     cx: &'a AnimationEngineContext,
     numbers: Vec<Entity>,
     x: f32,

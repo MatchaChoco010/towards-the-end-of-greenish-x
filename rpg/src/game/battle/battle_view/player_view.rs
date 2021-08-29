@@ -2,7 +2,7 @@ use animation_engine::executor::*;
 use animation_engine::*;
 use futures::{join, try_join};
 
-use crate::game::battle::damage_number_view::*;
+use crate::game::battle::battle_view::damage_number_view::*;
 
 pub(super) struct PlayerView<'a> {
     cx: &'a AnimationEngineContext,

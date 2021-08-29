@@ -4,20 +4,9 @@ use log::info;
 use crate::game;
 use crate::game_data;
 
-mod background_view;
 mod battle_model;
 mod battle_scene;
 mod battle_view;
-mod cover_view;
-mod damage_number_view;
-mod enemy_view;
-mod items_window;
-mod menu_view;
-mod message_window_view;
-mod number_view;
-mod player_view;
-mod skills_window;
-
 pub use battle_scene::*;
 
 pub async fn battle(
