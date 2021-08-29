@@ -14,7 +14,7 @@ mod number_view;
 mod player_view;
 mod skills_window;
 
-use crate::game::battle::battle_model::SelectCommandData;
+use crate::game::battle::battle_model::*;
 use crate::game::battle::battle_view::background_view::*;
 use crate::game::battle::battle_view::cover_view::*;
 use crate::game::battle::battle_view::enemy_view::*;
@@ -31,11 +31,6 @@ pub(super) use items_window::ItemWindowItem;
 pub(super) use number_view::Number;
 pub(super) use number_view::NumberView;
 pub(super) use skills_window::SkillWindowItem;
-
-pub(super) enum BattleCommand {
-    Skill(SkillId),
-    Item(ItemId),
-}
 
 // pub(super) struct PlayerModifierViewItem<'a> {
 //     name_key: String,

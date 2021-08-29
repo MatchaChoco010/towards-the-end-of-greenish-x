@@ -5,8 +5,10 @@ data:
     - keys:
         - frame: 1
           value: 460.0
-        - frame: 90
+        - frame: 20
           value: 410.0
+        - frame: 90
+          value: 380.0
   - - Opacity_opacity
     - keys:
         - frame: 1

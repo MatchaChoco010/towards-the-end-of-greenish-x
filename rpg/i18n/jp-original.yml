@@ -271,14 +271,6 @@ texts:
     {}が襲いかかってきた！
   battle-message-turn-start: |-
     あなたの行動を選んでください
-  battle-message-player-damage: |-
-    {}のダメージを受けた！
-  battle-message-player-heal: |-
-    HPを{}回復した！
-  battle-message-enemy-damage: |-
-    {}に{}のダメージを与えた！
-  battle-message-enemy-heal: |-
-    {}はHPを{}回復した！
   battle-message-enemy-down: |-
     {}を倒した！
 
@@ -518,3 +510,6 @@ texts:
   level-7-text-2: |-
     周囲はすでに急速に暗くなり、その暗がりからは魔物があなたの様子を
     うかがっているようだ。あなたは先を急ぐことにする。
+
+  test-attack: あなたの攻撃！
+  test-enemy-attack: '{}の攻撃！'
