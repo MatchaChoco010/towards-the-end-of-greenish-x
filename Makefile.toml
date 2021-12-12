@@ -19,6 +19,10 @@ mkdir ./archive
 command = "cargo"
 args = ["build", "--release", "-p", "rpg"]
 
+[tasks.build-executable-with-logging]
+command = "cargo"
+args = ["build", "--release", "-p", "rpg", "--features", "logging"]
+
 [tasks.copy-executable]
 dependencies = ["mkdir-archive", "build-executable"]
 script_runner = "@duckscript"
@@ -93,7 +97,7 @@ cp ./rpg/i18n/ ./target/release/
 
 [tasks.run-release-binary]
 dependencies = [
-    "build-executable",
+    "build-executable-with-logging",
     "copy-resources-to-target-dir",
     "copy-i18n-directory-to-target-dir"
 ]

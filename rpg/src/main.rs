@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "logging"), windows_subsystem = "windows")]
+
 use animation_engine::*;
 
 mod assets_load;

@@ -1,11 +1,9 @@
-use chrono;
-use fern;
-
+#[cfg(feature = "logging")]
 pub fn init_logger() {
     let base_config = fern::Dispatch::new();
 
     let file_config = fern::Dispatch::new()
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Warn)
         .level_for("rpg", log::LevelFilter::Trace)
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -37,4 +35,9 @@ pub fn init_logger() {
         .chain(stdout_config)
         .apply()
         .unwrap();
+}
+
+#[cfg(not(feature = "logging"))]
+pub fn init_logger() {
+    // do nothing
 }
