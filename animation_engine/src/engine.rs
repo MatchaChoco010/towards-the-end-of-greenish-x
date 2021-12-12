@@ -616,12 +616,19 @@ impl EventHandler<GameError> for AnimationEngineContext {
         keycode: KeyCode,
         _keymods: event::KeyMods,
         _repeat: bool,
-    ) {
+    ) -> GameResult {
         self.get_mut().key_input.set_down(keycode);
+        Ok(())
     }
 
-    fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: event::KeyMods) {
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        keycode: KeyCode,
+        _keymods: event::KeyMods,
+    ) -> GameResult {
         self.get_mut().key_input.set_up(keycode);
+        Ok(())
     }
 
     fn gamepad_button_down_event(
@@ -629,8 +636,9 @@ impl EventHandler<GameError> for AnimationEngineContext {
         _ctx: &mut Context,
         button: Button,
         _id: event::GamepadId,
-    ) {
+    ) -> GameResult {
         self.get_mut().gamepad_input.set_down(button);
+        Ok(())
     }
 
     fn gamepad_button_up_event(
@@ -638,8 +646,9 @@ impl EventHandler<GameError> for AnimationEngineContext {
         _ctx: &mut Context,
         button: Button,
         _id: event::GamepadId,
-    ) {
+    ) -> GameResult {
         self.get_mut().gamepad_input.set_up(button);
+        Ok(())
     }
 
     fn gamepad_axis_event(
@@ -648,15 +657,17 @@ impl EventHandler<GameError> for AnimationEngineContext {
         axis: Axis,
         value: f32,
         _id: event::GamepadId,
-    ) {
+    ) -> GameResult {
         self.get_mut().gamepad_input.set_axis(axis, value);
+        Ok(())
     }
 
-    fn focus_event(&mut self, _ctx: &mut Context, gained: bool) {
+    fn focus_event(&mut self, _ctx: &mut Context, gained: bool) -> GameResult {
         if gained {
             self.get_mut().key_input.reset();
             self.get_mut().gamepad_input.reset();
         }
+        Ok(())
     }
 }
 
@@ -709,7 +720,8 @@ impl AnimationEngine {
                 width: 1280.0,
                 height: 720.0,
                 ..Default::default()
-            });
+            })
+            .resources_zip_name("data");
         if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
             let mut path = path::PathBuf::from(manifest_dir);
             path.push("resources");

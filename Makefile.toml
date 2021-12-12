@@ -45,7 +45,7 @@ script = '''
 use zip_extensions::*;
 fn main() {
     let path = std::path::PathBuf::from("./rpg/resources/");
-    let file = std::fs::File::create("./archive/resources.zip").unwrap();
+    let file = std::fs::File::create("./archive/data").unwrap();
     let mut zip = zip::ZipWriter::new(file);
     let options = zip::write::FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2);
@@ -72,7 +72,7 @@ fn main() {
     let file = std::fs::File::create("./archive.zip").unwrap();
     let mut zip = zip::ZipWriter::new(file);
     let options = zip::write::FileOptions::default()
-        .compression_method(zip::CompressionMethod::Bzip2);
+        .compression_method(zip::CompressionMethod::Stored);
     zip.create_from_directory_with_options(&path, options).unwrap();
 }
 '''
